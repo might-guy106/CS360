@@ -13,6 +13,7 @@ var shaderProgram;
 var aPositionLocation;
 var uMMatrixLocation;
 var uColorLocation;
+var uPointSizeLocation;
 
 // Buffers for primitives
 var sqVertexPositionBuffer;
@@ -31,9 +32,11 @@ var currentRenderMode; // Will be set after WebGL context is created
 const vertexShaderCode = `#version 300 es
 in vec2 aPosition;
 uniform mat4 uMMatrix;
+uniform float uPointSize;
 
 void main() {
   gl_Position = uMMatrix*vec4(aPosition,0.0,1.0);
+  gl_PointSize = uPointSize;
 }`;
 
 const fragShaderCode = `#version 300 es
@@ -320,13 +323,6 @@ function drawCloud(mMatrix, x = 0, y = 0, size) {
   drawCircleAt(mMatrix, c3, y - (r1 - r2) * 0.6, r3, rgb256(178, 178, 178, 1));
 }
 
-function drawStar(mMatrix, twinkle) {
-  var starColor = [1.0, 1.0, 0.8, twinkle];
-  gl.uniformMatrix4fv(uMMatrixLocation, false, mMatrix);
-  gl.uniform4fv(uColorLocation, starColor);
-  gl.drawArrays(gl.POINTS, 0, 1);
-}
-
 function drawSky() {
   let skyMatrix = mat4.create(model);
   skyMatrix = mat4.translate(skyMatrix, [0.0, 0.6, 0.0]);
@@ -565,6 +561,7 @@ function webGLStart() {
   aPositionLocation = gl.getAttribLocation(shaderProgram, "aPosition");
   uMMatrixLocation = gl.getUniformLocation(shaderProgram, "uMMatrix");
   uColorLocation = gl.getUniformLocation(shaderProgram, "uColor");
+  uPointSizeLocation = gl.getUniformLocation(shaderProgram, "uPointSize");
 
   // Enable vertex attribute
   gl.enableVertexAttribArray(aPositionLocation);
@@ -576,6 +573,9 @@ function webGLStart() {
 
   // Set initial render mode after WebGL context exists
   currentRenderMode = gl.TRIANGLES;
+
+  // Default point size (useful for POINTS render mode)
+  if (uPointSizeLocation) gl.uniform1f(uPointSizeLocation, 4.0);
 
   // Draw the scene
   drawScene();
