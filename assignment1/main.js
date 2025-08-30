@@ -14,6 +14,8 @@ var aPositionLocation;
 var uMMatrixLocation;
 var uColorLocation;
 var uPointSizeLocation;
+var moonRotation = 0.0; // current rotation angle (radians)
+var moonSpeedDeg = 12.0; // degrees per second
 
 // Buffers for primitives
 var sqVertexPositionBuffer;
@@ -327,10 +329,40 @@ function drawSky() {
   let skyMatrix = mat4.create(model);
   skyMatrix = mat4.translate(skyMatrix, [0.0, 0.6, 0.0]);
   drawCloud(skyMatrix, -0.85, -0.05, 0.2);
-  // TODO: moon
+  // Moon (rotating)
+  drawMoon(skyMatrix, -0.7, 0.2, 0.1, moonRotation);
+
   let starMatrix = mat4.create(model);
   starMatrix = mat4.translate(starMatrix, [0.6, 0.7, 0.0]);
   // TODO Stars
+}
+
+// Draw a moon with rectangular spikes and rotate the spikes around the moon center
+function drawMoon(mMatrix, cx, cy, radius, rotation) {
+  // Base moon circle
+  let moonMat = mat4.create(mMatrix);
+  moonMat = mat4.translate(moonMat, [cx, cy, 0]);
+  moonMat = mat4.scale(moonMat, [radius, radius, 1]);
+  drawCircle(moonMat, rgb256(255, 250, 255));
+
+  // Spikes: draw several small rectangles around the circle, rotated by 'rotation'
+  const spikeCount = 8;
+  const spikeWidth = 0.005;
+  const spikeHeight = 0.04;
+  for (let i = 0; i < spikeCount; i++) {
+    const ang = (i * (2 * Math.PI)) / spikeCount + rotation;
+    // place spike at the rim
+    let spike = mat4.create(mMatrix);
+    // translate to moon center
+    spike = mat4.translate(spike, [cx, cy, 0]);
+    // rotate about center
+    spike = mat4.rotate(spike, ang, [0, 0, 1]);
+    // move outward along rotated X axis by (radius + spikeHeight/2)
+    spike = mat4.translate(spike, [radius + spikeHeight / 2, 0, 0]);
+    // scale to rectangle spike
+    spike = mat4.scale(spike, [spikeHeight, spikeWidth, 1]);
+    drawSquare(spike, rgb256(255, 255, 255));
+  }
 }
 
 //// Sky Part Ended
@@ -579,4 +611,18 @@ function webGLStart() {
 
   // Draw the scene
   drawScene();
+
+  // Animation loop for rotating moon and any future time-based animations
+  let lastTime = performance.now();
+  function animate(now) {
+    const dt = (now - lastTime) / 1000.0; // seconds
+    lastTime = now;
+    // update moon rotation
+    moonRotation += degToRad(moonSpeedDeg) * dt;
+    // keep in range
+    if (moonRotation > Math.PI * 2) moonRotation -= Math.PI * 2;
+    drawScene();
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
 }
