@@ -26,16 +26,16 @@ var starTime = 0.0;
 var windRotation = 0.0;
 var windSpeedDeg = 180.0; // degrees per second for fan
 // Boat state
-var boat1X = -0.6; // current x offset of the boat (world coords)
+var boat1X = 0.4; // current x offset of the boat (world coords)
 var boat1Dir = 1; // 1 = moving right, -1 = moving left
-var boat1Speed = 0.35; // world units per second
+var boat1Speed = 0.15; // world units per second
 var boat1MinX = -0.8;
 var boat1MaxX = 0.8;
 var boat1Y = -0.2; // vertical position for the boat on the river
 
 var boat2X = 0.0; // current x offset of the boat (world coords)
-var boat2Dir = -1; // 1 = moving right, -1 = moving left
-var boat2Speed = 0.35; // world units per second
+var boat2Dir = 1; // 1 = moving right, -1 = moving left
+var boat2Speed = 0.15; // world units per second
 var boat2MinX = -0.8;
 var boat2MaxX = 0.8;
 var boat2Y = -0.15; // vertical position for the boat on the river
@@ -629,7 +629,7 @@ function drawRiver() {
   const boat1Color = rgb256(242, 0, 0);
   const boat2Color = rgb256(115, 43, 166);
   drawBoat(model, boat1X, boat1Y, 0.18, boat1Color);
-  drawBoat(model, boat2X, boat2Y, 0.12, boat2Color);
+  drawBoat(model, boat2X, boat2Y, 0.11, boat2Color);
 }
 
 // Draw boat base as a trapezoid (central rectangle with two triangles to form slanted edges)
