@@ -679,6 +679,75 @@ function drawHouse(mMatrix, cx, cy, scale) {
   drawhouseRoof(mMatrix, cx, cy + bodyHeight / 2, scale * 1.4);
 }
 
+// Draw a tyre (circle) at (cx, cy) with radius r (in world units)
+function drawTyre(mMatrix, cx, cy, r) {
+  let t = mat4.create(mMatrix);
+  t = mat4.translate(t, [cx, cy, 0]);
+  t = mat4.scale(t, [r, r, 1]);
+  drawCircle(t, rgb256(20, 20, 20));
+
+  let it = mat4.create(mMatrix);
+  it = mat4.translate(it, [cx, cy, 0]);
+  it = mat4.scale(it, [r * 0.8, r * 0.8, 1]);
+  drawCircle(it, rgb256(128, 128, 128));
+}
+
+// Draw car body (trapezoid) and attach two tyres (front/back)
+function drawCarBody(mMatrix, cx, cy, scale) {
+  const bodyColor = rgb256(0, 128, 229);
+  const bodyWidth = 0.6 * scale;
+  const bodyHeight = 0.15 * scale;
+
+  // tyres positions relative to body
+  const tyreR = 0.06 * scale;
+  const backX = cx - bodyWidth * 0.35;
+  const frontX = cx + bodyWidth * 0.35;
+  const tyreY = cy - bodyHeight / 2 - tyreR * 0.6;
+  drawTyre(mMatrix, backX, tyreY, tyreR);
+  drawTyre(mMatrix, frontX, tyreY, tyreR);
+
+  // central rectangle portion (middle of trapezoid)
+  let bodyCenter = mat4.create(mMatrix);
+  bodyCenter = mat4.translate(bodyCenter, [cx, cy, 0]);
+  bodyCenter = mat4.scale(bodyCenter, [bodyWidth, bodyHeight, 1]);
+  drawSquare(bodyCenter, bodyColor);
+
+  // left small triangle to create slanted edge
+  let leftTri = mat4.create(mMatrix);
+  leftTri = mat4.translate(leftTri, [cx - bodyWidth / 2, cy, 0]);
+  leftTri = mat4.scale(leftTri, [0.2 * scale, bodyHeight, 1]);
+  drawTriangle(leftTri, bodyColor);
+
+  // right small triangle
+  let rightTri = mat4.create(mMatrix);
+  rightTri = mat4.translate(rightTri, [cx + bodyWidth / 2, cy, 0]);
+  rightTri = mat4.scale(rightTri, [0.2 * scale, bodyHeight, 1]);
+  drawTriangle(rightTri, bodyColor);
+}
+
+// Draw car top as a semicircle sitting on the body
+function drawCarTop(mMatrix, cx, cy, scale) {
+  const topColor = rgb256(0, 77, 178);
+  const topR = 0.25 * scale;
+  // draw full circle then body will cover lower half, giving semicircle appearance
+  let top = mat4.create(mMatrix);
+  top = mat4.translate(top, [cx, cy + 0.02 * scale, 0]);
+  top = mat4.scale(top, [topR, topR * 0.6, 1]);
+  drawCircle(top, topColor);
+
+  let wind = mat4.create(mMatrix);
+  wind = mat4.translate(wind, [cx, cy + 0.02 * scale, 0]);
+  wind = mat4.scale(wind, [topR * 1.2, topR * 0.65, 1]);
+  drawSquare(wind, rgb256(204, 204, 229));
+}
+
+// Draw a car at center (cx, cy) with overall scale
+function drawCar(mMatrix, cx, cy, scale) {
+  // top first (so body drawn later covers lower half)
+  drawCarTop(mMatrix, cx, cy + 0.06 * scale, scale);
+  drawCarBody(mMatrix, cx, cy - 0.02 * scale, scale);
+}
+
 function drawMainLand() {
   // Ground strip for main land
   let land = mat4.create(model);
@@ -687,7 +756,9 @@ function drawMainLand() {
   drawSquare(land, rgb256(0, 200, 100));
 
   // Draw a few houses
-  drawHouse(model, -0.55, -0.55, 0.8);
+  drawHouse(model, -0.55, -0.55, 0.75);
+  // Draw a car near the house
+  drawCar(model, -0.5, -0.85, 0.6);
 }
 
 //// Main Land Ended
