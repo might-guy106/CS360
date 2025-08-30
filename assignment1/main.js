@@ -599,8 +599,8 @@ function drawRiverLines(x, y) {
 
 function drawRiver() {
   let river = mat4.create(model);
-  river = mat4.translate(river, [0.0, -0.21, 0.0]);
-  river = mat4.scale(river, [2, 0.15, 1.0]);
+  river = mat4.translate(river, [0.0, -0.28, 0.0]);
+  river = mat4.scale(river, [2, 0.3, 1.0]);
   drawSquare(river, rgb256(0, 102, 255));
 
   drawRiverLines(-0.7, -0.22);
@@ -613,9 +613,81 @@ function drawRiver() {
 
 //// Main Land
 
+function drawhouseRoof(mMatrix, cx, cy, scale) {
+  const roofColor = rgb256(255, 77, 0);
+  const roofHeight = 0.18 * scale;
+  const roofWidth = 0.4 * scale;
+
+  // roof center
+  let roofCenter = mat4.create(mMatrix);
+  roofCenter = mat4.translate(roofCenter, [cx, cy, 0]);
+  roofCenter = mat4.scale(roofCenter, [roofWidth, roofHeight, 1]);
+  drawSquare(roofCenter, roofColor);
+
+  // small left triangle to make trapezoid effect
+  const triBase = 0.18 * scale;
+  let leftTri = mat4.create(mMatrix);
+  leftTri = mat4.translate(leftTri, [cx - roofWidth / 2, cy, 0]);
+  leftTri = mat4.scale(leftTri, [triBase, roofHeight, 1]);
+  drawTriangle(leftTri, roofColor);
+
+  let rightTri = mat4.create(mMatrix);
+  rightTri = mat4.translate(rightTri, [cx + roofWidth / 2, cy, 0]);
+  rightTri = mat4.scale(rightTri, [triBase, roofHeight, 1]);
+  drawTriangle(rightTri, roofColor);
+}
+
+function drawHouseBody(mMatrix, cx, cy, scale) {
+  const bodyColor = rgb256(229, 229, 229);
+  const doorColor = rgb256(229, 128, 0);
+  const bodyHeight = 0.4 * scale;
+  const bodyWidth = 0.6 * scale;
+  const windowColor = rgb256(229, 128, 0);
+
+  // house body (rectangle)
+  let body = mat4.create(mMatrix);
+  body = mat4.translate(body, [cx, cy, 0]);
+  body = mat4.scale(body, [bodyWidth, bodyHeight, 1]);
+  drawSquare(body, bodyColor);
+
+  // door
+  const doorHeight = 0.18 * scale;
+  const doorWidth = 0.1 * scale;
+  let door = mat4.create(mMatrix);
+  door = mat4.translate(door, [cx, cy - bodyHeight / 2 + doorHeight / 2, 0]);
+  door = mat4.scale(door, [doorWidth, doorHeight, 1]);
+  drawSquare(door, doorColor);
+
+  // windows (left and right)
+  let windowWidth = 0.08 * scale;
+  let w1 = mat4.create(mMatrix);
+  w1 = mat4.translate(w1, [cx - 0.15 * scale, cy + windowWidth / 2, 0]);
+  w1 = mat4.scale(w1, [windowWidth, windowWidth, 1]);
+  drawSquare(w1, windowColor);
+
+  let w2 = mat4.create(mMatrix);
+  w2 = mat4.translate(w2, [cx + 0.15 * scale, cy + windowWidth / 2, 0]);
+  w2 = mat4.scale(w2, [windowWidth, windowWidth, 1]);
+  drawSquare(w2, windowColor);
+
+  return bodyHeight;
+}
+
+// Draw a simple house at (cx, cy) with overall scale
+function drawHouse(mMatrix, cx, cy, scale) {
+  const bodyHeight = drawHouseBody(mMatrix, cx, cy, scale * 1.1);
+  drawhouseRoof(mMatrix, cx, cy + bodyHeight / 2, scale * 1.4);
+}
+
 function drawMainLand() {
-  // Placeholder ground line (optional) and debug primitives currently used.
-  // TODO: add house, car, windmill (with rotating blades) below river.
+  // Ground strip for main land
+  let land = mat4.create(model);
+  land = mat4.translate(land, [0.0, -0.68, 0.0]);
+  land = mat4.scale(land, [2, 0.7, 1.0]);
+  drawSquare(land, rgb256(0, 200, 100));
+
+  // Draw a few houses
+  drawHouse(model, -0.55, -0.55, 0.8);
 }
 
 //// Main Land Ended
