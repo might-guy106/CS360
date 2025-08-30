@@ -23,6 +23,8 @@ const MIN_TWINKLE = 0.5;
 const MAX_TWINKLE = 1.0;
 var starCount = 5;
 var starTime = 0.0;
+var windRotation = 0.0;
+var windSpeedDeg = 180.0; // degrees per second for fan
 
 // Buffers for primitives
 var sqVertexPositionBuffer;
@@ -572,11 +574,14 @@ function drawTree(mMatrix, x, baseY, scale) {
 
 function drawMountainLand() {
   drawMountains(model);
+
+  // draw green land
   let land = mat4.create(model);
-  land = mat4.translate(land, [0.0, -0.15, 0.0]);
-  land = mat4.scale(land, [2, 0.1, 1.0]);
+  land = mat4.translate(land, [0.0, -0.6, 0.0]);
+  land = mat4.scale(land, [2, 1, 1.0]);
   drawSquare(land, rgb256(0, 229, 128));
-  const treeBaseY = -0.15 + 0.05;
+
+  const treeBaseY = -0.11;
   drawTree(model, 0.8, treeBaseY, 0.8);
   drawTree(model, 0.6, treeBaseY, 0.9);
   drawTree(model, 0.4, treeBaseY, 0.7);
@@ -588,7 +593,7 @@ function drawMountainLand() {
 
 function drawRiverLines(x, y) {
   const lineColor = rgb256(255, 255, 255);
-  const lineWidth = 0.002;
+  const lineWidth = 0.0021;
   const lineLength = 0.4;
 
   let line = mat4.create(model);
@@ -599,13 +604,13 @@ function drawRiverLines(x, y) {
 
 function drawRiver() {
   let river = mat4.create(model);
-  river = mat4.translate(river, [0.0, -0.28, 0.0]);
-  river = mat4.scale(river, [2, 0.3, 1.0]);
+  river = mat4.translate(river, [0.0, -0.23, 0.0]);
+  river = mat4.scale(river, [2, 0.2, 1.0]);
   drawSquare(river, rgb256(0, 102, 255));
 
   drawRiverLines(-0.7, -0.22);
-  drawRiverLines(0.6, -0.25);
   drawRiverLines(0.0, -0.18);
+  drawRiverLines(0.7, -0.295);
   // TODO: boats
 }
 
@@ -639,10 +644,10 @@ function drawhouseRoof(mMatrix, cx, cy, scale) {
 
 function drawHouseBody(mMatrix, cx, cy, scale) {
   const bodyColor = rgb256(229, 229, 229);
-  const doorColor = rgb256(229, 128, 0);
+  const doorColor = rgb256(229, 178, 0);
   const bodyHeight = 0.4 * scale;
   const bodyWidth = 0.6 * scale;
-  const windowColor = rgb256(229, 128, 0);
+  const windowColor = rgb256(229, 178, 0);
 
   // house body (rectangle)
   let body = mat4.create(mMatrix);
@@ -748,17 +753,118 @@ function drawCar(mMatrix, cx, cy, scale) {
   drawCarBody(mMatrix, cx, cy - 0.02 * scale, scale);
 }
 
+// Draw windmill fan: circular center with 4 triangular blades rotated by angle
+function drawFan(mMatrix, cx, cy, radius, angle) {
+  const centerColor = rgb256(0, 0, 0);
+  const bladeColor = rgb256(178, 178, 0);
+
+  // 4 blades
+  const bladeLen = radius * 1.8;
+  const bladeWidth = radius * 0.5;
+  for (let i = 0; i < 4; i++) {
+    const a = angle + (i * Math.PI) / 2;
+    let b = mat4.create(mMatrix);
+    b = mat4.translate(b, [cx, cy, 0]);
+    b = mat4.rotate(b, a, [0, 0, 1]);
+    // translate along x by half blade length (so triangle touches center)
+    b = mat4.translate(b, [0, -bladeLen / 2, 0]);
+    // scale triangle to blade size
+    b = mat4.scale(b, [bladeWidth, bladeLen, 1]);
+    drawTriangle(b, bladeColor);
+  }
+
+  // center circle
+  let c = mat4.create(mMatrix);
+  c = mat4.translate(c, [cx, cy, 0]);
+  c = mat4.scale(c, [radius * 0.25, radius * 0.25, 1]);
+  drawCircle(c, centerColor);
+}
+
+function drawPole(mMatrix, cx, baseY, height, width) {
+  const poleColor = rgb256(51, 51, 51);
+  let p = mat4.create(mMatrix);
+  p = mat4.translate(p, [cx, baseY + height / 2, 0]);
+  p = mat4.scale(p, [width, height, 1]);
+  drawSquare(p, poleColor);
+}
+
+function drawWindmill(mMatrix, cx, baseY, scale, rotation) {
+  // pole height relative to scale
+  const poleH = 0.5 * scale;
+  const poleW = 0.03 * scale;
+  drawPole(mMatrix, cx, baseY, poleH, poleW);
+  // fan at top of pole
+  drawFan(mMatrix, cx, baseY + poleH, 0.12 * scale, rotation);
+}
+
+function drawGrassCircle(mMatrix, cx, cy, r, color) {
+  let localMatrix = mat4.create(mMatrix);
+  localMatrix = mat4.translate(localMatrix, [cx, cy, 0]);
+  localMatrix = mat4.scale(localMatrix, [r, r * 0.7, 1]);
+  drawCircle(localMatrix, color);
+}
+
+function drawGrass(mMatrix, cx, cy, size) {
+  const r1 = size * 0.6;
+  const r2 = size * 1.2;
+  const r3 = size * 0.6;
+  const color1 = rgb256(0, 178, 0, 1);
+  const color2 = rgb256(0, 153, 0, 1);
+  const color3 = rgb256(0, 102, 0, 1);
+
+  let circ1 = mat4.create(mMatrix);
+  circ1 = mat4.translate(circ1, [cx - size * 1.3, cy - size * 0.1, 0]);
+  circ1 = mat4.scale(circ1, [r1, r1, 1]);
+  drawCircle(circ1, color1);
+
+  let circ2 = mat4.create(mMatrix);
+  circ2 = mat4.translate(circ2, [cx + size * 1.3, cy - size * 0.1, 0]);
+  circ2 = mat4.scale(circ2, [r3, r3, 1]);
+  drawCircle(circ2, color3);
+
+  let circ3 = mat4.create(mMatrix);
+  circ3 = mat4.translate(circ3, [cx, cy, 0]);
+  circ3 = mat4.scale(circ3, [r2, r2 * 0.65, 1]);
+  drawCircle(circ3, color2);
+}
+
+function drawGrasses() {
+  let grasses = [
+    { x: -0.9, y: -0.66, r: 0.07 },
+    { x: -0.235, y: -0.63, r: 0.1 },
+    { x: -0.12, y: -1.08, r: 0.2 },
+    { x: 1.02, y: -0.49, r: 0.1 },
+  ];
+  grasses.forEach((grass) => {
+    drawGrass(model, grass.x, grass.y, grass.r);
+  });
+}
+
+function drawRoad() {
+  const roadColor = rgb256(102, 178, 51);
+  let r = mat4.create(model);
+  r = mat4.translate(r, [0.35, -0.8, 0]);
+  r = mat4.rotate(r, Math.PI / 4 + 0.1, [0, 0, 1]);
+  r = mat4.scale(r, [1.8, 1.6, 1]);
+  drawTriangle(r, roadColor);
+}
+
 function drawMainLand() {
   // Ground strip for main land
   let land = mat4.create(model);
   land = mat4.translate(land, [0.0, -0.68, 0.0]);
   land = mat4.scale(land, [2, 0.7, 1.0]);
-  drawSquare(land, rgb256(0, 200, 100));
+  // drawSquare(land, rgb256(0, 200, 100));
 
+  // Draw some grass
+  drawGrasses();
   // Draw a few houses
-  drawHouse(model, -0.55, -0.55, 0.75);
+  drawHouse(model, -0.6, -0.55, 0.75);
   // Draw a car near the house
   drawCar(model, -0.5, -0.85, 0.6);
+  // Draw a windmill on the right side of the main land
+  drawWindmill(model, 0.53, -0.38, 0.8, windRotation);
+  drawWindmill(model, 0.7, -0.54, 1.0, windRotation);
 }
 
 //// Main Land Ended
@@ -790,6 +896,7 @@ function drawScene() {
   // Layered scene back-to-front
   drawSky();
   drawMountainLand();
+  drawRoad();
   drawRiver();
   drawMainLand();
 }
@@ -832,6 +939,8 @@ function webGLStart() {
     lastTime = now;
     // update moon rotation
     moonRotation += degToRad(moonSpeedDeg) * dt;
+    // update windmill rotation
+    windRotation += degToRad(windSpeedDeg) * dt;
     // Update twinkle value which goes from range [0, 1] to [0.1, 1.4]
     if (twinkleDir == 1) {
       twinkle += dt * twinkleSpeed;
