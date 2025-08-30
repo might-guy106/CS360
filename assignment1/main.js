@@ -291,12 +291,56 @@ function drawTriangle(mMatrix, color) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-// Complex Objects - Simple
+// Main Code
 //////////////////////////////////////////////////////////////////////////////////
 
-// Draw a single mountain given its base (y of the base line), width, and height.
-// The unit triangle is centered vertically (-0.5..0.5). Base after scaling is at (centerY - 0.5*height).
-// To place the base at baseY we translate by baseY + 0.5*height (so center sits half height above base).
+//// Sky Part
+
+function drawCircleAt(mMatrix, cx, cy, r, color) {
+  let localMatrix = mat4.create(mMatrix);
+  localMatrix = mat4.translate(localMatrix, [cx, cy, 0]);
+  localMatrix = mat4.scale(localMatrix, [r, r * 0.6, 1]);
+  drawCircle(localMatrix, color);
+}
+
+function drawCloud(mMatrix, x = 0, y = 0, size) {
+  const r1 = size;
+  const r2 = size * 0.8;
+  const r3 = size * 0.6;
+
+  // Place first cloud at x
+  const c1 = x;
+  // Second cloud
+  const c2 = c1 + (r1 + r2) * 0.6;
+  // Third cloud
+  const c3 = c2 + (r2 + r3) * 0.8;
+
+  drawCircleAt(mMatrix, c1, y, r1, rgb256(178, 178, 178, 1));
+  drawCircleAt(mMatrix, c2, y - (r1 - r2) * 0.6, r2, rgb256(255, 255, 255, 1));
+  drawCircleAt(mMatrix, c3, y - (r1 - r2) * 0.6, r3, rgb256(178, 178, 178, 1));
+}
+
+function drawStar(mMatrix, twinkle) {
+  var starColor = [1.0, 1.0, 0.8, twinkle];
+  gl.uniformMatrix4fv(uMMatrixLocation, false, mMatrix);
+  gl.uniform4fv(uColorLocation, starColor);
+  gl.drawArrays(gl.POINTS, 0, 1);
+}
+
+function drawSky() {
+  let skyMatrix = mat4.create(model);
+  skyMatrix = mat4.translate(skyMatrix, [0.0, 0.6, 0.0]);
+  drawCloud(skyMatrix, -0.85, -0.05, 0.2);
+  // TODO: moon
+  let starMatrix = mat4.create(model);
+  starMatrix = mat4.translate(starMatrix, [0.6, 0.7, 0.0]);
+  // TODO Stars
+}
+
+//// Sky Part Ended
+
+//// Mountain Land Part
+// Draw a single mountain given its base
 function drawMountain(mMatrix, x, baseY, width, height, color) {
   let local = mat4.create(mMatrix);
   local = mat4.translate(local, [x, baseY + 0.5 * height, 0]);
@@ -305,8 +349,6 @@ function drawMountain(mMatrix, x, baseY, width, height, color) {
 }
 
 // Draw a mountain with a shadow/highlight overlay triangle rotated about the top vertex.
-// colorMain: base mountain color, colorOverlay: shadow/highlight color.
-// angle (radians) optional; small negative tilts to the left.
 function drawShadowedMountain(
   mMatrix,
   x,
@@ -378,36 +420,104 @@ function drawMountains(mMatrix) {
   }
 }
 
-function drawCircleAt(mMatrix, cx, cy, r, color) {
-  let localMatrix = mat4.create(mMatrix);
-  localMatrix = mat4.translate(localMatrix, [cx, cy, 0]);
-  localMatrix = mat4.scale(localMatrix, [r, r * 0.6, 1]);
-  drawCircle(localMatrix, color);
+// Draw tree top foliage layers whose
+function drawTreeTop(mMatrix, x, centerY, scale) {
+  const layers = 3;
+  const scaleFactor = 1.1;
+  const diff = scale * 0.06;
+  const color1 = rgb256(0, 153, 77);
+  const color2 = rgb256(78, 178, 78);
+  const color3 = rgb256(101, 204, 77);
+
+  let layerBaseWidth = scale * 0.4;
+  let layerHeight = scale * 0.3;
+  let newY = centerY + layerHeight / 2;
+  let layerMat1 = mat4.create(mMatrix);
+  layerMat1 = mat4.translate(layerMat1, [x, newY, 0]);
+  layerMat1 = mat4.scale(layerMat1, [layerBaseWidth, layerHeight, 1]);
+  drawTriangle(layerMat1, color1);
+
+  layerBaseWidth = layerBaseWidth * scaleFactor;
+  layerHeight = layerHeight * scaleFactor;
+  newY = newY + diff;
+  let layerMat2 = mat4.create(mMatrix);
+  layerMat2 = mat4.translate(layerMat2, [x, newY, 0]);
+  layerMat2 = mat4.scale(layerMat2, [layerBaseWidth, layerHeight, 1]);
+  drawTriangle(layerMat2, color2);
+
+  layerBaseWidth = layerBaseWidth * scaleFactor;
+  layerHeight = layerHeight * scaleFactor;
+  newY = newY + diff;
+  let layerMat3 = mat4.create(mMatrix);
+  layerMat3 = mat4.translate(layerMat3, [x, newY, 0]);
+  layerMat3 = mat4.scale(layerMat3, [layerBaseWidth, layerHeight, 1]);
+  drawTriangle(layerMat3, color3);
 }
 
-function drawCloud(mMatrix, size) {
-  const r1 = size;
-  const r2 = size * 0.8;
-  const r3 = size * 0.6;
+function drawTree(mMatrix, x, baseY, scale) {
+  const trunkColor = rgb256(128, 77, 77);
+  const trunkHeight = 0.35 * scale;
+  const trunkWidth = 0.05 * scale;
+  console.log("scale:", scale);
 
-  // Place first cloud at 0
-  const c1 = 0;
-  // Second cloud
-  const c2 = c1 + (r1 + r2) * 0.6;
-  // Third cloud
-  const c3 = c2 + (r2 + r3) * 0.8;
+  let trunk = mat4.create(mMatrix);
+  trunk = mat4.translate(trunk, [x, baseY + trunkHeight / 2, 0]);
+  trunk = mat4.scale(trunk, [trunkWidth, trunkHeight, 1]);
+  drawSquare(trunk, trunkColor);
 
-  drawCircleAt(mMatrix, c1, 0, r1, rgb256(178, 178, 178, 1));
-  drawCircleAt(mMatrix, c2, -(r1 - r2) * 0.6, r2, rgb256(255, 255, 255, 1));
-  drawCircleAt(mMatrix, c3, -(r1 - r2) * 0.6, r3, rgb256(178, 178, 178, 1));
+  const centerY = baseY + trunkHeight;
+  drawTreeTop(mMatrix, x, centerY, scale);
 }
 
-function drawStar(mMatrix, twinkle) {
-  var starColor = [1.0, 1.0, 0.8, twinkle];
-  gl.uniformMatrix4fv(uMMatrixLocation, false, mMatrix);
-  gl.uniform4fv(uColorLocation, starColor);
-  gl.drawArrays(gl.POINTS, 0, 1);
+function drawMountainLand() {
+  drawMountains(model);
+  let land = mat4.create(model);
+  land = mat4.translate(land, [0.0, -0.15, 0.0]);
+  land = mat4.scale(land, [2, 0.1, 1.0]);
+  drawSquare(land, rgb256(0, 229, 128));
+  const treeBaseY = -0.15 + 0.05;
+  drawTree(model, 0.8, treeBaseY, 0.8);
+  drawTree(model, 0.6, treeBaseY, 0.9);
+  drawTree(model, 0.4, treeBaseY, 0.7);
 }
+
+//// Mountain Land Ended
+
+//// River
+
+function drawRiverLines(x, y) {
+  const lineColor = rgb256(255, 255, 255);
+  const lineWidth = 0.002;
+  const lineLength = 0.4;
+
+  let line = mat4.create(model);
+  line = mat4.translate(line, [x, y, 0.0]);
+  line = mat4.scale(line, [lineLength, lineWidth, 1.0]);
+  drawSquare(line, lineColor);
+}
+
+function drawRiver() {
+  let river = mat4.create(model);
+  river = mat4.translate(river, [0.0, -0.21, 0.0]);
+  river = mat4.scale(river, [2, 0.15, 1.0]);
+  drawSquare(river, rgb256(0, 102, 255));
+
+  drawRiverLines(-0.7, -0.22);
+  drawRiverLines(0.6, -0.25);
+  drawRiverLines(0.0, -0.18);
+  // TODO: boats
+}
+
+//// River Ended
+
+//// Main Land
+
+function drawMainLand() {
+  // Placeholder ground line (optional) and debug primitives currently used.
+  // TODO: add house, car, windmill (with rotating blades) below river.
+}
+
+//// Main Land Ended
 
 // Rendering mode control
 function setRenderMode(mode) {
@@ -438,72 +548,6 @@ function drawScene() {
   drawMountainLand();
   drawRiver();
   drawMainLand();
-}
-
-// ================= Scene Layer Functions =================
-function drawSky() {
-  let skyMatrix = mat4.create(model);
-  skyMatrix = mat4.translate(skyMatrix, [0.0, 0.6, 0.0]);
-  drawCloud(skyMatrix, 0.2);
-  // TODO: moon
-  let starMatrix = mat4.create(model);
-  starMatrix = mat4.translate(starMatrix, [0.6, 0.7, 0.0]);
-  drawStar(starMatrix, 0.8);
-}
-
-function drawMountainLand() {
-  drawMountains(model);
-  let land = mat4.create(model);
-  land = mat4.translate(land, [0.0, -0.15, 0.0]);
-  land = mat4.scale(land, [2, 0.1, 1.0]);
-  drawSquare(land, rgb256(0, 229, 128));
-  const treeBaseY = -0.15 + 0.05;
-  drawTree(model, -0.9, treeBaseY, 0.55);
-  drawTree(model, -0.4, treeBaseY, 0.65);
-  drawTree(model, 0.15, treeBaseY, 0.6);
-}
-
-function drawRiver() {
-  let river = mat4.create(model);
-  river = mat4.translate(river, [0.0, -0.21, 0.0]);
-  river = mat4.scale(river, [2, 0.15, 1.0]);
-  drawSquare(river, rgb256(0, 102, 255));
-  // TODO: boats
-}
-
-function drawMainLand() {
-  // Placeholder ground line (optional) and debug primitives currently used.
-  // TODO: add house, car, windmill (with rotating blades) below river.
-}
-
-// ================= Complex Objects: Trees =================
-// Tree made from: rectangle trunk (scaled square) + stacked triangle foliage layers.
-// x: horizontal center, baseY: y position of ground contact, scale: overall size factor.
-function drawTree(mMatrix, x, baseY, scale = 0.6) {
-  const trunkColor = rgb256(120, 78, 40);
-  const foliageColor = rgb256(34, 139, 34);
-  const foliageHighlight = rgb256(50, 170, 60);
-  const trunkHeight = 0.35 * scale;
-  const trunkWidth = 0.1 * scale;
-  const layers = 3;
-  const layerBaseWidth = 0.55 * scale;
-  const layerHeight = 0.3 * scale;
-  const overlap = 0.12 * scale;
-
-  let trunk = mat4.create(mMatrix);
-  trunk = mat4.translate(trunk, [x, baseY + trunkHeight / 2, 0]);
-  trunk = mat4.scale(trunk, [trunkWidth, trunkHeight, 1]);
-  drawSquare(trunk, trunkColor);
-  for (let i = 0; i < layers; i++) {
-    const w = layerBaseWidth * (1 - i * 0.18);
-    const h = layerHeight;
-    const layerBase = baseY + trunkHeight - i * overlap;
-    const centerY = layerBase + h / 2;
-    let triM = mat4.create(mMatrix);
-    triM = mat4.translate(triM, [x, centerY, 0]);
-    triM = mat4.scale(triM, [w, h, 1]);
-    drawTriangle(triM, i === layers - 1 ? foliageHighlight : foliageColor);
-  }
 }
 
 // Main entry point
