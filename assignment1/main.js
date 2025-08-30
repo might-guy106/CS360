@@ -16,6 +16,13 @@ var uColorLocation;
 var uPointSizeLocation;
 var moonRotation = 0.0; // current rotation angle (radians)
 var moonSpeedDeg = 12.0; // degrees per second
+var twinkle = 0.0;
+var twinkleDir = 1;
+var twinkleSpeed = 0.8;
+const MIN_TWINKLE = 0.5;
+const MAX_TWINKLE = 1.0;
+var starCount = 5;
+var starTime = 0.0;
 
 // Buffers for primitives
 var sqVertexPositionBuffer;
@@ -332,9 +339,75 @@ function drawSky() {
   // Moon (rotating)
   drawMoon(skyMatrix, -0.7, 0.2, 0.1, moonRotation);
 
-  let starMatrix = mat4.create(model);
-  starMatrix = mat4.translate(starMatrix, [0.6, 0.7, 0.0]);
-  // TODO Stars
+  drawStars();
+}
+
+function drawStars() {
+  stars = [
+    { x: -0.15, y: 0.5, size: 0.01 },
+    { x: -0.1, y: 0.6, size: 0.02 },
+    { x: -0.25, y: 0.7, size: 0.02 },
+    { x: 0.45, y: 0.7, size: 0.03 },
+    { x: 0.65, y: 0.9, size: 0.01 },
+  ];
+
+  // draw each star as a point with alpha varying sinusoidally
+  if (!stars || stars.length === 0) return;
+  for (const s of stars) {
+    drawStarAt(s.x, s.y, s.size);
+  }
+}
+
+// Draw a single star at (x,y) with size (pixels) and twinkle alpha
+function drawStarAt(x, y, size) {
+  // twinkle controls scale (shrink/expand)
+  const starColor = [1.0, 1.0, 1, 1.0];
+  // Map incoming 'size' (previously in px) to a world scale
+  const animScale = size * twinkle * 0.5;
+
+  // central square
+  let sq = mat4.create(model);
+  sq = mat4.translate(sq, [x, y, 0]);
+  sq = mat4.scale(sq, [animScale, animScale, 1]);
+  drawSquare(sq, starColor);
+
+  // triangles around (top, right, bottom, left)
+  const triScale = animScale * 3;
+  let x_offset = 0.0;
+  let y_offset = 0.5 * animScale + 0.5 * triScale; // move so triangles sit on square edges
+
+  // top
+  let t = mat4.create(model);
+  t = mat4.translate(t, [x + x_offset, y + y_offset, 0]);
+  t = mat4.scale(t, [animScale, triScale, 1]);
+  drawTriangle(t, starColor);
+
+  // right
+  x_offset = 0.5 * animScale + 0.5 * triScale; // move so triangles sit on square edges
+  y_offset = 0.0;
+  let tr = mat4.create(model);
+  tr = mat4.translate(tr, [x + x_offset, y + y_offset, 0]);
+  tr = mat4.rotate(tr, degToRad(-90), [0, 0, 1]);
+  tr = mat4.scale(tr, [animScale, triScale, 1]);
+  drawTriangle(tr, starColor);
+
+  // bottom
+  x_offset = 0.0;
+  y_offset = -(0.5 * animScale + 0.5 * triScale); // move so triangles sit on square edges
+  let tb = mat4.create(model);
+  tb = mat4.translate(tb, [x + x_offset, y + y_offset, 0]);
+  tb = mat4.rotate(tb, degToRad(180), [0, 0, 1]);
+  tb = mat4.scale(tb, [animScale, triScale, 1]);
+  drawTriangle(tb, starColor);
+
+  // left
+  x_offset = -(0.5 * animScale + 0.5 * triScale); // move so triangles sit on square edges
+  y_offset = 0.0;
+  let tl = mat4.create(model);
+  tl = mat4.translate(tl, [x + x_offset, y + y_offset, 0]);
+  tl = mat4.rotate(tl, degToRad(90), [0, 0, 1]);
+  tl = mat4.scale(tl, [animScale, triScale, 1]);
+  drawTriangle(tl, starColor);
 }
 
 // Draw a moon with rectangular spikes and rotate the spikes around the moon center
@@ -609,9 +682,6 @@ function webGLStart() {
   // Default point size (useful for POINTS render mode)
   if (uPointSizeLocation) gl.uniform1f(uPointSizeLocation, 4.0);
 
-  // Draw the scene
-  drawScene();
-
   // Animation loop for rotating moon and any future time-based animations
   let lastTime = performance.now();
   function animate(now) {
@@ -619,8 +689,19 @@ function webGLStart() {
     lastTime = now;
     // update moon rotation
     moonRotation += degToRad(moonSpeedDeg) * dt;
-    // keep in range
-    if (moonRotation > Math.PI * 2) moonRotation -= Math.PI * 2;
+    // Update twinkle value which goes from range [0, 1] to [0.1, 1.4]
+    if (twinkleDir == 1) {
+      twinkle += dt * twinkleSpeed;
+      if (twinkle >= MAX_TWINKLE) {
+        twinkleDir = 0;
+      }
+    } else {
+      twinkle -= dt * twinkleSpeed;
+      if (twinkle <= MIN_TWINKLE) {
+        twinkleDir = 1;
+      }
+    }
+
     drawScene();
     requestAnimationFrame(animate);
   }
