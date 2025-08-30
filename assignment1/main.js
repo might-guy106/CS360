@@ -25,6 +25,20 @@ var starCount = 5;
 var starTime = 0.0;
 var windRotation = 0.0;
 var windSpeedDeg = 180.0; // degrees per second for fan
+// Boat state
+var boat1X = -0.6; // current x offset of the boat (world coords)
+var boat1Dir = 1; // 1 = moving right, -1 = moving left
+var boat1Speed = 0.35; // world units per second
+var boat1MinX = -0.8;
+var boat1MaxX = 0.8;
+var boat1Y = -0.2; // vertical position for the boat on the river
+
+var boat2X = 0.0; // current x offset of the boat (world coords)
+var boat2Dir = -1; // 1 = moving right, -1 = moving left
+var boat2Speed = 0.35; // world units per second
+var boat2MinX = -0.8;
+var boat2MaxX = 0.8;
+var boat2Y = -0.15; // vertical position for the boat on the river
 
 // Buffers for primitives
 var sqVertexPositionBuffer;
@@ -611,7 +625,75 @@ function drawRiver() {
   drawRiverLines(-0.7, -0.22);
   drawRiverLines(0.0, -0.18);
   drawRiverLines(0.7, -0.295);
-  // TODO: boats
+  // draw a moving boat on the river
+  const boat1Color = rgb256(242, 0, 0);
+  const boat2Color = rgb256(115, 43, 166);
+  drawBoat(model, boat1X, boat1Y, 0.18, boat1Color);
+  drawBoat(model, boat2X, boat2Y, 0.12, boat2Color);
+}
+
+// Draw boat base as a trapezoid (central rectangle with two triangles to form slanted edges)
+function drawBoatBase(mMatrix, cx, cy, scale) {
+  const baseColor = rgb256(204, 204, 204);
+  const bodyW = 0.65 * scale;
+  const bodyH = 0.15 * scale;
+
+  // central rectangle
+  let center = mat4.create(mMatrix);
+  center = mat4.translate(center, [cx, cy - bodyH / 2, 0]);
+  center = mat4.scale(center, [bodyW, bodyH, 1]);
+  drawSquare(center, baseColor);
+
+  // left triangle to make trapezoid
+  let leftTri = mat4.create(mMatrix);
+  leftTri = mat4.translate(leftTri, [cx - bodyW * 0.5, cy - bodyH / 2, 0]);
+  leftTri = mat4.rotateZ(leftTri, Math.PI);
+  leftTri = mat4.scale(leftTri, [0.2 * scale, bodyH, 1]);
+  drawTriangle(leftTri, baseColor);
+
+  // right triangle
+  let rightTri = mat4.create(mMatrix);
+  rightTri = mat4.translate(rightTri, [cx + bodyW * 0.5, cy - bodyH / 2, 0]);
+  rightTri = mat4.rotateZ(rightTri, Math.PI);
+  rightTri = mat4.scale(rightTri, [0.2 * scale, bodyH, 1]);
+  drawTriangle(rightTri, baseColor);
+}
+
+// Draw boat top: pole (rectangle) and triangular flag
+function drawBoatTop(mMatrix, cx, cy, scale, color) {
+  const poleColor = rgb256(0, 0, 0);
+  const flagColor = color;
+  const poleH = 1.4 * scale;
+  const poleW = 0.06 * scale;
+
+  // pole (rectangle)
+  let pole = mat4.create(mMatrix);
+  pole = mat4.translate(pole, [cx, cy + poleH / 2, 0]);
+  pole = mat4.scale(pole, [poleW, poleH, 1]);
+  drawSquare(pole, poleColor);
+
+  // draw Thread
+  let thread = mat4.create(mMatrix);
+  thread = mat4.translate(thread, [cx - 0.38 * scale, cy + 0.55 * scale, 0]);
+  thread = mat4.rotateZ(thread, -0.5);
+  thread = mat4.scale(thread, [0.02 * scale, 1.5 * scale, 1]);
+  drawSquare(thread, poleColor);
+
+  // flag: triangle anchored at top of pole
+  const flagW = 1.1 * scale;
+  const flagH = 1 * scale;
+  let flag = mat4.create(mMatrix);
+  flag = mat4.translate(flag, [cx + flagH / 2 + poleW / 2, cy + poleH / 2, 0]);
+  flag = mat4.rotateZ(flag, -Math.PI / 2);
+  flag = mat4.scale(flag, [flagW, flagH, 1]);
+  drawTriangle(flag, flagColor);
+}
+
+// Compose the boat from base and top; boat1X moves left-right and flips flag direction visually by flipping flag placement when moving left
+function drawBoat(mMatrix, cx, cy, scale, color) {
+  // base
+  drawBoatTop(mMatrix, cx, cy, scale, color);
+  drawBoatBase(mMatrix, cx, cy, scale * 2);
 }
 
 //// River Ended
@@ -941,6 +1023,25 @@ function webGLStart() {
     moonRotation += degToRad(moonSpeedDeg) * dt;
     // update windmill rotation
     windRotation += degToRad(windSpeedDeg) * dt;
+    // update boat position and reverse at bounds
+    boat1X += boat1Dir * boat1Speed * dt;
+    if (boat1X > boat1MaxX) {
+      boat1X = boat1MaxX;
+      boat1Dir = -1;
+    } else if (boat1X < boat1MinX) {
+      boat1X = boat1MinX;
+      boat1Dir = 1;
+    }
+
+    boat2X += boat2Dir * boat2Speed * dt;
+    if (boat2X > boat2MaxX) {
+      boat2X = boat2MaxX;
+      boat2Dir = -1;
+    } else if (boat2X < boat2MinX) {
+      boat2X = boat2MinX;
+      boat2Dir = 1;
+    }
+
     // Update twinkle value which goes from range [0, 1] to [0.1, 1.4]
     if (twinkleDir == 1) {
       twinkle += dt * twinkleSpeed;
