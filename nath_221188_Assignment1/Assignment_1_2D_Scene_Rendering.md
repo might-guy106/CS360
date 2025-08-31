@@ -41,14 +41,3 @@ same.
    c. gl.TRIANGLES to show the solid surface mode
 
 See the video for reference.
-
-## Description of the Scene
-
-1. sky : it again contains clouds in oval shape, twinkling starts, rotating moon.
-2. Mountains and trees (backside of a horizontal river) : mountains and tree where mountains are triangles and trees are rectangle with stacked displaced triangles as the top portion.
-3. a horizontals river : which further contains 2 boats. bouncing left and right of the edge as the river is horizontal they both hit left and right edges.
-4. the boat has a base of trapezoid and a rectangle pole with triangle flag.
-5. the front land which in 2d is below the river contains multiple things. a house, a car a windmill. as the assignment said everything is made of the circles, triangles, and squares.
-6. a house is trapezoid top with 2 windows and a door with rectanglura shape.
-7. the view of car is from side view so only 2 tyres are visible. with base trapezoid to which wheels are attached. and a top of semicircle.
-8. a windmill is rectangular pole to which on top a circular disc to which 4 triangles are attached which are rotating wrt disc.
