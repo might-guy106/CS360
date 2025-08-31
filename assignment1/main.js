@@ -150,7 +150,7 @@ function initSquareBuffer() {
 
 // Circle primitive setup (triangle fan approach)
 function initCircleBuffer() {
-  const numSegments = 32; // Number of triangular segments for smooth circle
+  const numSegments = 64; // Number of triangular segments for smooth circle
   const vertices = [];
   const indices = [];
 
@@ -236,9 +236,19 @@ function drawSquare(mMatrix, color) {
 
   // Use current rendering mode
   if (currentRenderMode === gl.POINTS) {
-    gl.drawArrays(gl.POINTS, 0, sqVertexPositionBuffer.numItems);
+    gl.drawElements(
+      gl.POINTS,
+      sqVertexIndexBuffer.numItems,
+      gl.UNSIGNED_SHORT,
+      0
+    );
   } else if (currentRenderMode === gl.LINE_LOOP) {
-    gl.drawArrays(gl.LINE_LOOP, 0, sqVertexPositionBuffer.numItems);
+    gl.drawElements(
+      gl.LINE_LOOP,
+      sqVertexIndexBuffer.numItems,
+      gl.UNSIGNED_SHORT,
+      0
+    );
   } else {
     gl.drawElements(
       gl.TRIANGLES,
@@ -270,10 +280,20 @@ function drawCircle(mMatrix, color) {
 
   // Use current rendering mode
   if (currentRenderMode === gl.POINTS) {
-    gl.drawArrays(gl.POINTS, 0, circleVertexPositionBuffer.numItems);
+    gl.drawElements(
+      gl.POINTS,
+      circleVertexIndexBuffer.numItems,
+      gl.UNSIGNED_SHORT,
+      0
+    );
   } else if (currentRenderMode === gl.LINE_LOOP) {
     // For wireframe, draw just the outer edge (skip center vertex)
-    gl.drawArrays(gl.LINE_LOOP, 1, circleVertexPositionBuffer.numItems - 1);
+    gl.drawElements(
+      gl.LINE_LOOP,
+      circleVertexIndexBuffer.numItems,
+      gl.UNSIGNED_SHORT,
+      0
+    );
   } else {
     gl.drawElements(
       gl.TRIANGLES,
@@ -305,9 +325,19 @@ function drawTriangle(mMatrix, color) {
 
   // Use current rendering mode
   if (currentRenderMode === gl.POINTS) {
-    gl.drawArrays(gl.POINTS, 0, triVertexPositionBuffer.numItems);
+    gl.drawElements(
+      gl.POINTS,
+      triVertexIndexBuffer.numItems,
+      gl.UNSIGNED_SHORT,
+      0
+    );
   } else if (currentRenderMode === gl.LINE_LOOP) {
-    gl.drawArrays(gl.LINE_LOOP, 0, triVertexPositionBuffer.numItems);
+    gl.drawElements(
+      gl.LINE_LOOP,
+      triVertexIndexBuffer.numItems,
+      gl.UNSIGNED_SHORT,
+      0
+    );
   } else {
     gl.drawElements(
       gl.TRIANGLES,
@@ -348,9 +378,16 @@ function drawCloud(mMatrix, x = 0, y = 0, size) {
   drawCircleAt(mMatrix, c3, y - (r1 - r2) * 0.6, r3, rgb256(178, 178, 178, 1));
 }
 
+function drawSkyBG(mMatrix) {
+  let bgMatrix = mat4.create(mMatrix);
+  bgMatrix = mat4.scale(bgMatrix, [4, 2, 1]);
+  drawSquare(bgMatrix, rgb256(0, 0, 0, 1)); // Sky blue
+}
+
 function drawSky() {
   let skyMatrix = mat4.create(model);
   skyMatrix = mat4.translate(skyMatrix, [0.0, 0.6, 0.0]);
+  drawSkyBG(skyMatrix);
   drawCloud(skyMatrix, -0.85, -0.05, 0.2);
   // Moon (rotating)
   drawMoon(skyMatrix, -0.7, 0.2, 0.1, moonRotation);
@@ -970,7 +1007,7 @@ function setRenderMode(mode) {
 // Main drawing function
 function drawScene() {
   gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-  gl.clearColor(0.0, 0.0, 0.0, 1.0); // Light blue sky background
+  gl.clearColor(1.0, 1.0, 1.0, 1.0); // Light blue sky background
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   // Reset model matrix
@@ -1012,7 +1049,7 @@ function webGLStart() {
   currentRenderMode = gl.TRIANGLES;
 
   // Default point size (useful for POINTS render mode)
-  if (uPointSizeLocation) gl.uniform1f(uPointSizeLocation, 4.0);
+  if (uPointSizeLocation) gl.uniform1f(uPointSizeLocation, 3);
 
   // Animation loop for rotating moon and any future time-based animations
   let lastTime = performance.now();

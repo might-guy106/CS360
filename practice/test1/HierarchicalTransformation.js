@@ -125,7 +125,7 @@ function initSquareBuffer() {
   sqVertexIndexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sqVertexIndexBuffer);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sqIndices, gl.STATIC_DRAW);
-  sqVertexIndexBuffer.itemsize = 1;
+  sqVertexIndexBuffer.itemSize = 1;
   sqVertexIndexBuffer.numItems = 6;
 }
 
@@ -133,19 +133,16 @@ function drawSquare(mMatrix, color) {
   gl.uniformMatrix4fv(uMMatrixLocation, false, mMatrix);
 
   // buffer for point locations
-  // gl.bindBuffer(gl.ARRAY_BUFFER, sqVertexPositionBuffer);
   gl.vertexAttribPointer(
     aPositionLocation,
     sqVertexPositionBuffer.itemSize,
     gl.FLOAT,
     false,
     0,
-    0,
+    0
   );
 
   // buffer for point indices
-  // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sqVertexIndexBuffer);
-
   gl.uniform4fv(uColorLocation, color);
 
   // now draw the square
@@ -153,7 +150,7 @@ function drawSquare(mMatrix, color) {
     gl.TRIANGLES,
     sqVertexIndexBuffer.numItems,
     gl.UNSIGNED_SHORT,
-    0,
+    0
   );
 }
 
