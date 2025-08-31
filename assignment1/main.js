@@ -539,7 +539,7 @@ function drawMountains(mMatrix) {
   const baseY = -0.14; // common base line (adjust as needed)
   let w1 = 0.9;
   let w2 = 1.1;
-  let w3 = 0.7;
+  let w3 = 0.8;
   let ratio = 0.25;
   const mountains = [
     {
@@ -561,7 +561,7 @@ function drawMountains(mMatrix) {
     {
       x: 0.82,
       w: w3,
-      h: w3 * ratio,
+      h: w3 * 0.2,
       c_overlay: rgb256(150, 120, 82),
       c_base: rgb256(128, 100, 66, 1),
       angle: degToRad(0),
