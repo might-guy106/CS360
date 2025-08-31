@@ -786,7 +786,7 @@ function drawHouseBody(mMatrix, cx, cy, scale) {
 
   // door
   const doorHeight = 0.18 * scale;
-  const doorWidth = 0.1 * scale;
+  const doorWidth = 0.08 * scale;
   let door = mat4.create(mMatrix);
   door = mat4.translate(door, [cx, cy - bodyHeight / 2 + doorHeight / 2, 0]);
   door = mat4.scale(door, [doorWidth, doorHeight, 1]);
@@ -795,12 +795,12 @@ function drawHouseBody(mMatrix, cx, cy, scale) {
   // windows (left and right)
   let windowWidth = 0.08 * scale;
   let w1 = mat4.create(mMatrix);
-  w1 = mat4.translate(w1, [cx - 0.15 * scale, cy + windowWidth / 2, 0]);
+  w1 = mat4.translate(w1, [cx - 0.18 * scale, cy, 0]);
   w1 = mat4.scale(w1, [windowWidth, windowWidth, 1]);
   drawSquare(w1, windowColor);
 
   let w2 = mat4.create(mMatrix);
-  w2 = mat4.translate(w2, [cx + 0.15 * scale, cy + windowWidth / 2, 0]);
+  w2 = mat4.translate(w2, [cx + 0.18 * scale, cy, 0]);
   w2 = mat4.scale(w2, [windowWidth, windowWidth, 1]);
   drawSquare(w2, windowColor);
 
