@@ -36,8 +36,8 @@ var boat1Y = -0.2; // vertical position for the boat on the river
 var boat2X = 0.0; // current x offset of the boat (world coords)
 var boat2Dir = 1; // 1 = moving right, -1 = moving left
 var boat2Speed = 0.15; // world units per second
-var boat2MinX = -0.8;
-var boat2MaxX = 0.8;
+var boat2MinX = -0.85;
+var boat2MaxX = 0.85;
 var boat2Y = -0.15; // vertical position for the boat on the river
 
 // Buffers for primitives
@@ -400,8 +400,8 @@ function drawStars() {
     { x: -0.15, y: 0.5, size: 0.01 },
     { x: -0.1, y: 0.6, size: 0.02 },
     { x: -0.25, y: 0.7, size: 0.02 },
-    { x: 0.45, y: 0.7, size: 0.03 },
-    { x: 0.65, y: 0.9, size: 0.01 },
+    { x: 0.35, y: 0.8, size: 0.03 },
+    { x: 0.55, y: 0.9, size: 0.015 },
   ];
 
   // draw each star as a point with alpha varying sinusoidally
@@ -511,10 +511,17 @@ function drawShadowedMountain(
   height,
   colorMain,
   colorOverlay,
-  angle = degToRad(-12)
+  angle
 ) {
   // Base mountain
-  drawMountain(mMatrix, x, baseY, width, height, colorMain);
+  let baseMountain = mat4.create(mMatrix);
+  baseMountain = mat4.translate(baseMountain, [x, baseY + 0.5 * height, 0]);
+  baseMountain = mat4.scale(baseMountain, [width, height, 1]);
+  // Pivot around top vertex (0, 0.5) in unit triangle space
+  baseMountain = mat4.translate(baseMountain, [0, 0.5, 0]);
+  baseMountain = mat4.rotate(baseMountain, -angle, [0, 0, 1]);
+  baseMountain = mat4.translate(baseMountain, [0, -0.5, 0]);
+  drawTriangle(baseMountain, colorMain);
 
   // Rebuild the same base transform for overlay
   let overlay = mat4.create(mMatrix);
@@ -529,31 +536,32 @@ function drawShadowedMountain(
 
 // Draw overlapping mountains sharing a common base line.
 function drawMountains(mMatrix) {
-  const baseY = -0.1; // common base line (adjust as needed)
+  const baseY = -0.14; // common base line (adjust as needed)
   let w1 = 0.9;
-  let w2 = 1.2;
+  let w2 = 1.1;
   let w3 = 0.7;
+  let ratio = 0.25;
   const mountains = [
     {
-      x: -0.7,
+      x: -0.68,
       w: w1,
-      h: w1 * 0.3,
+      h: w1 * ratio,
       c_overlay: rgb256(150, 120, 82),
       c_base: rgb256(128, 93, 66, 1),
-      angle: degToRad(8),
+      angle: degToRad(5),
     },
     {
-      x: 0.1,
+      x: 0.0,
       w: w2,
-      h: w2 * 0.3,
+      h: w2 * ratio * 1.2,
       c_overlay: rgb256(150, 120, 82),
       c_base: rgb256(128, 100, 66, 1),
-      angle: degToRad(8),
+      angle: degToRad(4),
     },
     {
-      x: 0.9,
+      x: 0.82,
       w: w3,
-      h: w3 * 0.3,
+      h: w3 * ratio,
       c_overlay: rgb256(150, 120, 82),
       c_base: rgb256(128, 100, 66, 1),
       angle: degToRad(0),
@@ -610,7 +618,7 @@ function drawTreeTop(mMatrix, x, centerY, scale) {
 
 function drawTree(mMatrix, x, baseY, scale) {
   const trunkColor = rgb256(128, 77, 77);
-  const trunkHeight = 0.35 * scale;
+  const trunkHeight = 0.29 * scale;
   const trunkWidth = 0.05 * scale;
   console.log("scale:", scale);
 
@@ -625,7 +633,6 @@ function drawTree(mMatrix, x, baseY, scale) {
 
 function drawMountainLand() {
   drawMountains(model);
-
   // draw green land
   let land = mat4.create(model);
   land = mat4.translate(land, [0.0, -0.6, 0.0]);
@@ -633,9 +640,9 @@ function drawMountainLand() {
   drawSquare(land, rgb256(0, 229, 128));
 
   const treeBaseY = -0.11;
-  drawTree(model, 0.8, treeBaseY, 0.8);
-  drawTree(model, 0.6, treeBaseY, 0.9);
-  drawTree(model, 0.4, treeBaseY, 0.7);
+  drawTree(model, 0.8, treeBaseY, 0.89);
+  drawTree(model, 0.55, treeBaseY, 1);
+  drawTree(model, 0.25, treeBaseY, 0.79);
 }
 
 //// Mountain Land Ended
@@ -654,6 +661,9 @@ function drawRiverLines(x, y) {
 }
 
 function drawRiver() {
+  let trans = mat4.create(model);
+  trans = mat4.translate(trans, [0.0, 0, 0.0]);
+
   let river = mat4.create(model);
   river = mat4.translate(river, [0.0, -0.23, 0.0]);
   river = mat4.scale(river, [2, 0.2, 1.0]);
@@ -949,9 +959,9 @@ function drawGrass(mMatrix, cx, cy, size) {
 
 function drawGrasses() {
   let grasses = [
-    { x: -0.9, y: -0.66, r: 0.07 },
-    { x: -0.235, y: -0.63, r: 0.1 },
-    { x: -0.12, y: -1.08, r: 0.2 },
+    { x: -0.9, y: -0.685, r: 0.07 },
+    { x: -0.23, y: -0.66, r: 0.1 },
+    { x: -0.11, y: -1.17, r: 0.2 },
     { x: 1.02, y: -0.49, r: 0.1 },
   ];
   grasses.forEach((grass) => {
@@ -978,11 +988,11 @@ function drawMainLand() {
   // Draw some grass
   drawGrasses();
   // Draw a few houses
-  drawHouse(model, -0.6, -0.55, 0.75);
+  drawHouse(model, -0.6, -0.57, 0.78);
   // Draw a car near the house
-  drawCar(model, -0.5, -0.85, 0.6);
+  drawCar(model, -0.5, -0.88, 0.65);
   // Draw a windmill on the right side of the main land
-  drawWindmill(model, 0.53, -0.38, 0.8, windRotation);
+  drawWindmill(model, 0.53, -0.38, 0.7, windRotation);
   drawWindmill(model, 0.7, -0.54, 1.0, windRotation);
 }
 
@@ -1014,6 +1024,7 @@ function drawScene() {
   mat4.identity(model);
   // Layered scene back-to-front
   drawSky();
+  model = mat4.translate(model, [0.0, 0.1, 0.0]);
   drawMountainLand();
   drawRoad();
   drawRiver();
@@ -1059,7 +1070,7 @@ function webGLStart() {
     // update moon rotation
     moonRotation += degToRad(moonSpeedDeg) * dt;
     // update windmill rotation
-    windRotation += degToRad(windSpeedDeg) * dt;
+    windRotation -= degToRad(windSpeedDeg) * dt;
     // update boat position and reverse at bounds
     boat1X += boat1Dir * boat1Speed * dt;
     if (boat1X > boat1MaxX) {
