@@ -172,3 +172,51 @@ void main() {
     vec3 fColor = uAmbientColor * ambient + uDiffuseColor * diffuse + uSpecularColor * specular;
     fragColor = vec4(fColor, 1.0);
 }`;
+
+function vertexShaderSetup(vertexShaderCode) {
+  shader = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(shader, vertexShaderCode);
+  gl.compileShader(shader);
+  // Error check whether the shader is compiled correctly
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    alert(gl.getShaderInfoLog(shader));
+    return null;
+  }
+  return shader;
+}
+
+function fragmentShaderSetup(fragShaderCode) {
+  shader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(shader, fragShaderCode);
+  gl.compileShader(shader);
+  // Error check whether the shader is compiled correctly
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    alert(gl.getShaderInfoLog(shader));
+    return null;
+  }
+  return shader;
+}
+
+function initShaders(vertexShaderCode, fragShaderCode) {
+  shaderProgram = gl.createProgram();
+
+  var vertexShader = vertexShaderSetup(vertexShaderCode);
+  var fragmentShader = fragmentShaderSetup(fragShaderCode);
+
+  // attach the shaders
+  gl.attachShader(shaderProgram, vertexShader);
+  gl.attachShader(shaderProgram, fragmentShader);
+  //link the shader program
+  gl.linkProgram(shaderProgram);
+
+  // check for compilation and linking status
+  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+    console.log(gl.getShaderInfoLog(vertexShader));
+    console.log(gl.getShaderInfoLog(fragmentShader));
+  }
+
+  //finally use the program.
+  gl.useProgram(shaderProgram);
+
+  return shaderProgram;
+}
