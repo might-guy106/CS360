@@ -2,6 +2,8 @@
 
 var gl;
 var canvas;
+var viewportHeight;
+var viewportWidth;
 
 var matrixStack = [];
 
@@ -284,7 +286,7 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [0.3, 0.3, 0.3]);
 
   diffuseColor = [0.65, 0.47, 0.12];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 
   pushMatrix(matrixStack, mMatrix);
@@ -296,7 +298,7 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [1.35, 0.03, 0.25]);
 
   diffuseColor = [0.93, 0.04, 0.07];
-  drawCube();
+  drawCube(mMatrix, vMatrix, pMatrix);
 
   mMatrix = popMatrix(matrixStack);
 
@@ -305,11 +307,13 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [0.4, 0.4, 0.4]);
 
   diffuseColor = [0.54, 0.54, 0.67];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 }
 
 function drawScene() {
+  viewportHeight = canvas.height;
+  viewportWidth = canvas.width / 3;
   // You need to enable scissor_test to be able to use multiple viewports
   gl.enable(gl.SCISSOR_TEST);
 
@@ -320,8 +324,8 @@ function drawScene() {
   shaderProgram = flatShaderProgram;
   gl.useProgram(shaderProgram);
 
-  gl.viewport(0, 0, 400, 400);
-  gl.scissor(0, 0, 400, 400);
+  gl.viewport(0, 0, viewportWidth, viewportHeight);
+  gl.scissor(0, 0, viewportWidth, viewportHeight);
 
   gl.clearColor(0.85, 0.85, 0.95, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -359,8 +363,8 @@ function drawScene() {
   shaderProgram = perVertShaderProgram;
   gl.useProgram(shaderProgram);
 
-  gl.viewport(400, 0, 400, 400);
-  gl.scissor(400, 0, 400, 400);
+  gl.viewport(viewportWidth, 0, viewportWidth, viewportHeight);
+  gl.scissor(viewportWidth, 0, viewportWidth, viewportHeight);
 
   gl.clearColor(0.95, 0.85, 0.85, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -398,8 +402,8 @@ function drawScene() {
   shaderProgram = perFragShaderProgram;
   gl.useProgram(shaderProgram);
 
-  gl.viewport(800, 0, 400, 400);
-  gl.scissor(800, 0, 400, 400);
+  gl.viewport(2 * viewportWidth, 0, viewportWidth, viewportHeight);
+  gl.scissor(2 * viewportWidth, 0, viewportWidth, viewportHeight);
 
   gl.clearColor(0.85, 0.95, 0.85, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -438,47 +442,65 @@ function onMouseDown(event) {
   document.addEventListener("mouseup", onMouseUp, false);
   document.addEventListener("mouseout", onMouseOut, false);
 
+  // Get canvas bounding rectangle to account for its position on the page
+  var canvasRect = canvas.getBoundingClientRect();
+
+  // Calculate mouse position relative to canvas
+  var mouseX = event.clientX - canvasRect.left;
+  var mouseY = canvasRect.bottom - event.clientY;
+
   if (
-    event.layerX <= canvas.width &&
-    event.layerX >= 0 &&
-    event.layerY <= canvas.height &&
-    event.layerY >= 0
+    mouseX >= 0 &&
+    mouseX <= canvas.width &&
+    mouseY >= 0 &&
+    mouseY <= canvas.height
   ) {
-    prevMouseX = event.clientX;
-    prevMouseY = canvas.height - event.clientY;
-    var yLim = prevMouseY <= 300 && prevMouseY >= -100;
-    if (prevMouseX >= 50 && prevMouseX <= 450 && yLim) scene = 1;
-    else if (prevMouseX >= 450 && prevMouseX <= 850 && yLim) scene = 2;
-    else if (prevMouseX >= 850 && prevMouseX <= 1250 && yLim) scene = 3;
+    prevMouseX = mouseX;
+    prevMouseY = mouseY;
+
+    var yLim = mouseY <= viewportHeight && mouseY >= 0;
+    if (mouseX >= 0 && mouseX <= viewportWidth && yLim) scene = 1;
+    else if (mouseX >= viewportWidth && mouseX <= viewportWidth * 2 && yLim)
+      scene = 2;
+    else if (mouseX >= viewportWidth * 2 && mouseX <= viewportWidth * 3 && yLim)
+      scene = 3;
   }
 }
 
 function onMouseMove(event) {
   // make mouse interaction only within canvas
 
-  var mouseX = event.clientX;
-  var diffX1 = mouseX - prevMouseX;
-  prevMouseX = mouseX;
+  // Get canvas bounding rectangle to account for its position on the page
+  var canvasRect = canvas.getBoundingClientRect();
 
-  var mouseY = canvas.height - event.clientY;
+  // Calculate mouse position relative to canvas
+  var mouseX = event.clientX - canvasRect.left;
+  var mouseY = canvasRect.bottom - event.clientY; // Flip Y coordinate for WebGL
+
+  var diffX1 = mouseX - prevMouseX;
   var diffY2 = mouseY - prevMouseY;
+
+  prevMouseX = mouseX;
   prevMouseY = mouseY;
 
-  console.log(mouseX, mouseY);
-
-  // the '50' is added on the X-coordinate of the mouse because of the 50px
-  // margin on the left of the canvas
-  // the '100' is subtracted on the Y-coordinate of the mouse because of the
-  // 50px margin and the header which is of approx 50px
-
-  var yLim = mouseY <= 300 && mouseY >= -100;
-  if (mouseX >= 50 && mouseX <= 450 && yLim && scene == 1) {
+  var yLim = mouseY <= viewportHeight && mouseY >= 0;
+  if (mouseX >= 0 && mouseX <= viewportWidth && yLim && scene == 1) {
     degree0 = degree0 + diffX1 / 5;
     degree1 = degree1 - diffY2 / 5;
-  } else if (mouseX >= 450 && mouseX <= 850 && yLim && scene == 2) {
+  } else if (
+    mouseX >= viewportWidth &&
+    mouseX <= viewportWidth * 2 &&
+    yLim &&
+    scene == 2
+  ) {
     degree2 = degree2 + diffX1 / 5;
     degree3 = degree3 - diffY2 / 5;
-  } else if (mouseX >= 850 && mouseX <= 1250 && yLim && scene == 3) {
+  } else if (
+    mouseX >= viewportWidth * 2 &&
+    mouseX <= viewportWidth * 3 &&
+    yLim &&
+    scene == 3
+  ) {
     degree4 = degree4 + diffX1 / 5;
     degree5 = degree5 - diffY2 / 5;
   }
@@ -497,7 +519,6 @@ function onMouseOut(event) {
   document.removeEventListener("mouseout", onMouseOut, false);
 }
 
-// This is the entry point from the html
 function webGLStart() {
   canvas = document.getElementById("assn2");
   document.addEventListener("mousedown", onMouseDown, false);
@@ -548,5 +569,3 @@ function webGLStart() {
 
   drawScene();
 }
-
-//
