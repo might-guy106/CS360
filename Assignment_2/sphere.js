@@ -95,7 +95,7 @@ function initSphereBuffer() {
   spIndexBuf.numItems = (nstacks - 1) * 6 * (nslices + 1);
 }
 
-function drawSphere() {
+function drawSphere(mMatrix, vMatrix, pMatrix) {
   // bind the vertex buffer
   gl.bindBuffer(gl.ARRAY_BUFFER, spBuf);
   gl.vertexAttribPointer(

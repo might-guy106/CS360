@@ -109,7 +109,7 @@ function drawScene1() {
 
   // Now draw the sphere
   diffuseColor = [0, 0.35, 0.6];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 
   pushMatrix(matrixStack, mMatrix);
@@ -118,7 +118,7 @@ function drawScene1() {
 
   // Draw the cube
   diffuseColor = [0.68, 0.68, 0.49];
-  drawCube();
+  drawCube(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 }
 
@@ -148,7 +148,7 @@ function drawScene2() {
   mMatrix = mat4.scale(mMatrix, [0.7, 0.7, 0.7]);
 
   diffuseColor = [0.73, 0.73, 0.73];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 
   pushMatrix(matrixStack, mMatrix);
@@ -159,7 +159,7 @@ function drawScene2() {
   mMatrix = mat4.rotate(mMatrix, -0.5, [0, 1, 0]);
 
   diffuseColor = [0, 0.52, 0];
-  drawCube();
+  drawCube(mMatrix, vMatrix, pMatrix);
 
   mMatrix = popMatrix(matrixStack);
 
@@ -168,7 +168,7 @@ function drawScene2() {
   mMatrix = mat4.scale(mMatrix, [0.4, 0.4, 0.4]);
 
   diffuseColor = [0.73, 0.73, 0.73];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 
   pushMatrix(matrixStack, mMatrix);
@@ -179,7 +179,7 @@ function drawScene2() {
   mMatrix = mat4.rotate(mMatrix, 0.2, [0, 1, 0]);
 
   diffuseColor = [0, 0.52, 0];
-  drawCube();
+  drawCube(mMatrix, vMatrix, pMatrix);
 
   mMatrix = popMatrix(matrixStack);
 
@@ -188,7 +188,7 @@ function drawScene2() {
   mMatrix = mat4.scale(mMatrix, [0.25, 0.25, 0.25]);
 
   diffuseColor = [0.73, 0.73, 0.73];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 }
 
@@ -213,7 +213,7 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [0.4, 0.4, 0.4]);
 
   diffuseColor = [0, 0.69, 0.14];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 
   pushMatrix(matrixStack, mMatrix);
@@ -225,7 +225,7 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [1.35, 0.03, 0.25]);
 
   diffuseColor = [0.93, 0.04, 0.07];
-  drawCube();
+  drawCube(mMatrix, vMatrix, pMatrix);
 
   mMatrix = popMatrix(matrixStack);
 
@@ -234,7 +234,7 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [0.3, 0.3, 0.3]);
 
   diffuseColor = [0.26, 0.27, 0.53];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 
   pushMatrix(matrixStack, mMatrix);
@@ -242,7 +242,7 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [0.3, 0.3, 0.3]);
 
   diffuseColor = [0.1, 0.32, 0.3];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 
   pushMatrix(matrixStack, mMatrix);
@@ -254,7 +254,7 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [0.6, 0.03, 0.3]);
 
   diffuseColor = [0.7, 0.6, 0.0];
-  drawCube();
+  drawCube(mMatrix, vMatrix, pMatrix);
 
   mMatrix = popMatrix(matrixStack);
 
@@ -267,7 +267,7 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [0.6, 0.03, 0.3]);
 
   diffuseColor = [0.18, 0.62, 0];
-  drawCube();
+  drawCube(mMatrix, vMatrix, pMatrix);
 
   mMatrix = popMatrix(matrixStack);
 
@@ -276,7 +276,7 @@ function drawScene3() {
   mMatrix = mat4.scale(mMatrix, [0.3, 0.3, 0.3]);
 
   diffuseColor = [0.69, 0, 0.69];
-  drawSphere();
+  drawSphere(mMatrix, vMatrix, pMatrix);
   mMatrix = popMatrix(matrixStack);
 
   pushMatrix(matrixStack, mMatrix);

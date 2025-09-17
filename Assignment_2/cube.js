@@ -94,7 +94,7 @@ function initCubeBuffer() {
   cubeIndexBuf.numItems = indices.length;
 }
 
-function drawCube() {
+function drawCube(mMatrix, vMatrix, pMatrix) {
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuf);
   gl.vertexAttribPointer(
     aPositionLocation,
