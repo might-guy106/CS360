@@ -3,8 +3,6 @@ var renderCanvas;
 var viewportHeight;
 var viewportWidth;
 
-var transformStack = [];
-
 var flatShadingShaderProgram;
 var gouraudShaderProgram;
 var phongShaderProgram;
@@ -49,9 +47,9 @@ var projectionMatrix = mat4.create();
 var normalMatrix = mat3.create();
 
 var lightPosition = [5, 4, 4];
-var ambientColor = [1, 1, 1];
+var ambientColor = [0.3, 0.3, 0.4];
 var diffuseColor = [1.0, 1.0, 1.0];
-var specularColor = [1.0, 1.0, 1.0];
+var specularColor = [0.9, 0.9, 1.0];
 
 var cameraPosition = [0.0, 0.0, 2.0];
 var lookAtTarget = [0.0, 0.0, 0.0];
@@ -72,14 +70,24 @@ function degreesToRadians(degrees) {
   return (degrees * Math.PI) / 180;
 }
 
-function pushMatrixToStack(stack, matrix) {
-  const copy = mat4.create(matrix);
-  stack.push(copy);
+function renderScene1Sphere1(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0, 0.5, 0]);
+  localMatrix = mat4.scale(localMatrix, [0.5, 0.5, 0.5]);
+
+  ambientColor = [0.1, 0.2, 0.3];
+  diffuseColor = [0.2, 0.6, 0.9];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
 }
 
-function popMatrixFromStack(stack) {
-  if (stack.length > 0) return stack.pop();
-  else console.log("stack has no matrix to pop!");
+function renderScene1Cube1(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0.0, -0.125, 0]);
+  localMatrix = mat4.scale(localMatrix, [0.45, 0.76, 0.5]);
+
+  ambientColor = [0.3, 0.2, 0.1];
+  diffuseColor = [0.9, 0.5, 0.2];
+  renderCube(localMatrix, viewMatrix, projectionMatrix);
 }
 
 function renderFirstScene() {
@@ -110,21 +118,65 @@ function renderFirstScene() {
   modelMatrix = mat4.scale(modelMatrix, [1.1, 1.1, 1.1]);
   modelMatrix = mat4.translate(modelMatrix, [0, -0.1, 0]);
 
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0, 0.5, 0]);
-  modelMatrix = mat4.scale(modelMatrix, [0.5, 0.5, 0.5]);
+  // Render objects using helper functions
+  renderScene1Sphere1(modelMatrix);
+  renderScene1Cube1(modelMatrix);
+}
 
-  diffuseColor = [0, 0.35, 0.6];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
+function renderScene2Sphere1(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0, -0.45, 0.1]);
+  localMatrix = mat4.scale(localMatrix, [0.7, 0.7, 0.7]);
 
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0.0, -0.125, 0]);
-  modelMatrix = mat4.scale(modelMatrix, [0.45, 0.76, 0.5]);
+  ambientColor = [0.2, 0.3, 0.25];
+  diffuseColor = [0.4, 0.8, 0.7];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
+}
 
-  diffuseColor = [0.68, 0.68, 0.49];
-  renderCube(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
+function renderScene2Cube1(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [-0.36, -0.05, 0.1]);
+  localMatrix = mat4.scale(localMatrix, [0.4, 0.4, 0.4]);
+  localMatrix = mat4.rotate(localMatrix, 0.5, [1, 0, 0]);
+  localMatrix = mat4.rotate(localMatrix, -0.45, [0, 0, 1]);
+  localMatrix = mat4.rotate(localMatrix, -0.5, [0, 1, 0]);
+
+  ambientColor = [0.25, 0.15, 0.3];
+  diffuseColor = [0.7, 0.3, 0.8];
+  renderCube(localMatrix, viewMatrix, projectionMatrix);
+}
+
+function renderScene2Sphere2(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [-0.18, 0.24, 0.25]);
+  localMatrix = mat4.scale(localMatrix, [0.4, 0.4, 0.4]);
+
+  ambientColor = [0.15, 0.25, 0.3];
+  diffuseColor = [0.3, 0.7, 0.9];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
+}
+
+function renderScene2Cube2(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0.095, 0.41, 0.3]);
+  localMatrix = mat4.scale(localMatrix, [0.25, 0.25, 0.25]);
+  localMatrix = mat4.rotate(localMatrix, 0.5, [1, 0, 0]);
+  localMatrix = mat4.rotate(localMatrix, 0.5, [0, 0, 1]);
+  localMatrix = mat4.rotate(localMatrix, 0.2, [0, 1, 0]);
+
+  ambientColor = [0.3, 0.2, 0.25];
+  diffuseColor = [0.9, 0.4, 0.6];
+  renderCube(localMatrix, viewMatrix, projectionMatrix);
+}
+
+function renderScene2Sphere3(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [-0.02, 0.6, 0.4]);
+  localMatrix = mat4.scale(localMatrix, [0.25, 0.25, 0.25]);
+
+  ambientColor = [0.2, 0.3, 0.2];
+  diffuseColor = [0.5, 0.8, 0.4];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
 }
 
 function renderSecondScene() {
@@ -150,53 +202,128 @@ function renderSecondScene() {
   modelMatrix = mat4.rotate(modelMatrix, 0.05, [0, 1, 0]);
   modelMatrix = mat4.scale(modelMatrix, [0.95, 0.95, 0.95]);
 
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0, -0.45, 0.1]);
-  modelMatrix = mat4.scale(modelMatrix, [0.7, 0.7, 0.7]);
+  // Render objects using helper functions
+  renderScene2Sphere1(modelMatrix);
+  renderScene2Cube1(modelMatrix);
+  renderScene2Sphere2(modelMatrix);
+  renderScene2Cube2(modelMatrix);
+  renderScene2Sphere3(modelMatrix);
+}
 
-  diffuseColor = [0.73, 0.73, 0.73];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
+function renderScene3Sphere1(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0, -0.6, 0.1]);
+  localMatrix = mat4.scale(localMatrix, [0.4, 0.4, 0.4]);
 
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [-0.36, -0.05, 0.1]);
-  modelMatrix = mat4.scale(modelMatrix, [0.4, 0.4, 0.4]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.5, [1, 0, 0]);
-  modelMatrix = mat4.rotate(modelMatrix, -0.45, [0, 0, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, -0.5, [0, 1, 0]);
+  ambientColor = [0.1, 0.3, 0.2];
+  diffuseColor = [0.2, 0.8, 0.5];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
+}
 
-  diffuseColor = [0, 0.52, 0];
-  renderCube(modelMatrix, viewMatrix, projectionMatrix);
+function renderScene3Cube1(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0.01, -0.38, 0.1]);
+  localMatrix = mat4.rotate(localMatrix, Math.PI / 4, [1, 1, 1]);
+  localMatrix = mat4.rotate(localMatrix, -0.6, [0, 0, 1]);
+  localMatrix = mat4.rotate(localMatrix, 0.1, [0, 1, 0]);
+  localMatrix = mat4.rotate(localMatrix, -0.1, [1, 0, 0]);
+  localMatrix = mat4.scale(localMatrix, [1.35, 0.03, 0.25]);
 
-  modelMatrix = popMatrixFromStack(transformStack);
+  ambientColor = [0.3, 0.15, 0.2];
+  diffuseColor = [0.9, 0.3, 0.4];
+  renderCube(localMatrix, viewMatrix, projectionMatrix);
+}
 
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [-0.18, 0.24, 0.25]);
-  modelMatrix = mat4.scale(modelMatrix, [0.4, 0.4, 0.4]);
+function renderScene3Sphere2(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [-0.35, -0.21, 0.4]);
+  localMatrix = mat4.scale(localMatrix, [0.3, 0.3, 0.3]);
 
-  diffuseColor = [0.73, 0.73, 0.73];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
+  ambientColor = [0.25, 0.2, 0.3];
+  diffuseColor = [0.6, 0.4, 0.9];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
+}
 
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0.095, 0.41, 0.3]);
-  modelMatrix = mat4.scale(modelMatrix, [0.25, 0.25, 0.25]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.5, [1, 0, 0]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.5, [0, 0, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.2, [0, 1, 0]);
+function renderScene3Sphere3(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0.35, -0.21, -0.2]);
+  localMatrix = mat4.scale(localMatrix, [0.3, 0.3, 0.3]);
 
-  diffuseColor = [0, 0.52, 0];
-  renderCube(modelMatrix, viewMatrix, projectionMatrix);
+  ambientColor = [0.15, 0.3, 0.25];
+  diffuseColor = [0.3, 0.9, 0.7];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
+}
 
-  modelMatrix = popMatrixFromStack(transformStack);
+function renderScene3Cube2(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [-0.35, -0.07, 0.45]);
+  localMatrix = mat4.rotate(localMatrix, (3 * Math.PI) / 4, [1, 1, 1]);
+  localMatrix = mat4.rotate(localMatrix, -1.45, [0, 0, 1]);
+  localMatrix = mat4.rotate(localMatrix, 0.6, [0, 1, 0]);
+  localMatrix = mat4.rotate(localMatrix, 0.1, [1, 0, 0]);
+  localMatrix = mat4.scale(localMatrix, [0.6, 0.03, 0.3]);
 
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [-0.02, 0.6, 0.4]);
-  modelMatrix = mat4.scale(modelMatrix, [0.25, 0.25, 0.25]);
+  ambientColor = [0.3, 0.25, 0.1];
+  diffuseColor = [0.9, 0.7, 0.2];
+  renderCube(localMatrix, viewMatrix, projectionMatrix);
+}
 
-  diffuseColor = [0.73, 0.73, 0.73];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
+function renderScene3Cube3(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0.35, -0.07, -0.2]);
+  localMatrix = mat4.rotate(localMatrix, (3 * Math.PI) / 4, [1, 1, 1]);
+  localMatrix = mat4.rotate(localMatrix, -1.45, [0, 0, 1]);
+  localMatrix = mat4.rotate(localMatrix, 0.6, [0, 1, 0]);
+  localMatrix = mat4.rotate(localMatrix, 0.1, [1, 0, 0]);
+  localMatrix = mat4.scale(localMatrix, [0.6, 0.03, 0.3]);
+
+  ambientColor = [0.2, 0.3, 0.15];
+  diffuseColor = [0.4, 0.8, 0.3];
+  renderCube(localMatrix, viewMatrix, projectionMatrix);
+}
+
+function renderScene3Sphere4(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [-0.35, 0.1, 0.4]);
+  localMatrix = mat4.scale(localMatrix, [0.3, 0.3, 0.3]);
+
+  ambientColor = [0.3, 0.15, 0.3];
+  diffuseColor = [0.8, 0.3, 0.9];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
+}
+
+function renderScene3Sphere5(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0.35, 0.1, -0.2]);
+  localMatrix = mat4.scale(localMatrix, [0.3, 0.3, 0.3]);
+
+  ambientColor = [0.3, 0.25, 0.1];
+  diffuseColor = [0.9, 0.6, 0.2];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
+}
+
+function renderScene3Cube4(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0.01, 0.265, 0.1]);
+  localMatrix = mat4.rotate(localMatrix, Math.PI / 4, [1, 1, 1]);
+  localMatrix = mat4.rotate(localMatrix, -0.6, [0, 0, 1]);
+  localMatrix = mat4.rotate(localMatrix, 0.12, [0, 1, 0]);
+  localMatrix = mat4.rotate(localMatrix, -0.25, [1, 0, 0]);
+  localMatrix = mat4.scale(localMatrix, [1.35, 0.03, 0.25]);
+
+  ambientColor = [0.3, 0.1, 0.15];
+  diffuseColor = [0.9, 0.2, 0.3];
+  renderCube(localMatrix, viewMatrix, projectionMatrix);
+}
+
+function renderScene3Sphere6(baseMatrix) {
+  let localMatrix = mat4.create(baseMatrix);
+  localMatrix = mat4.translate(localMatrix, [0, 0.48, 0.1]);
+  localMatrix = mat4.scale(localMatrix, [0.4, 0.4, 0.4]);
+
+  ambientColor = [0.25, 0.3, 0.3];
+  diffuseColor = [0.6, 0.8, 0.9];
+  renderSphere(localMatrix, viewMatrix, projectionMatrix);
 }
 
 function renderThirdScene() {
@@ -219,105 +346,17 @@ function renderThirdScene() {
     [1, 0, 0]
   );
 
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0, -0.6, 0.1]);
-  modelMatrix = mat4.scale(modelMatrix, [0.4, 0.4, 0.4]);
-
-  diffuseColor = [0, 0.69, 0.14];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
-
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0.01, -0.38, 0.1]);
-  modelMatrix = mat4.rotate(modelMatrix, Math.PI / 4, [1, 1, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, -0.6, [0, 0, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.1, [0, 1, 0]);
-  modelMatrix = mat4.rotate(modelMatrix, -0.1, [1, 0, 0]);
-  modelMatrix = mat4.scale(modelMatrix, [1.35, 0.03, 0.25]);
-
-  diffuseColor = [0.93, 0.04, 0.07];
-  renderCube(modelMatrix, viewMatrix, projectionMatrix);
-
-  modelMatrix = popMatrixFromStack(transformStack);
-
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [-0.35, -0.21, 0.4]);
-  modelMatrix = mat4.scale(modelMatrix, [0.3, 0.3, 0.3]);
-
-  diffuseColor = [0.26, 0.27, 0.53];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
-
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0.35, -0.21, -0.2]);
-  modelMatrix = mat4.scale(modelMatrix, [0.3, 0.3, 0.3]);
-
-  diffuseColor = [0.1, 0.32, 0.3];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
-
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [-0.35, -0.07, 0.45]);
-  modelMatrix = mat4.rotate(modelMatrix, (3 * Math.PI) / 4, [1, 1, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, -1.45, [0, 0, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.6, [0, 1, 0]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.1, [1, 0, 0]);
-  modelMatrix = mat4.scale(modelMatrix, [0.6, 0.03, 0.3]);
-
-  diffuseColor = [0.7, 0.6, 0.0];
-  renderCube(modelMatrix, viewMatrix, projectionMatrix);
-
-  modelMatrix = popMatrixFromStack(transformStack);
-
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0.35, -0.07, -0.2]);
-  modelMatrix = mat4.rotate(modelMatrix, (3 * Math.PI) / 4, [1, 1, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, -1.45, [0, 0, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.6, [0, 1, 0]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.1, [1, 0, 0]);
-  modelMatrix = mat4.scale(modelMatrix, [0.6, 0.03, 0.3]);
-
-  diffuseColor = [0.18, 0.62, 0];
-  renderCube(modelMatrix, viewMatrix, projectionMatrix);
-
-  modelMatrix = popMatrixFromStack(transformStack);
-
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [-0.35, 0.1, 0.4]);
-  modelMatrix = mat4.scale(modelMatrix, [0.3, 0.3, 0.3]);
-
-  diffuseColor = [0.69, 0, 0.69];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
-
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0.35, 0.1, -0.2]);
-  modelMatrix = mat4.scale(modelMatrix, [0.3, 0.3, 0.3]);
-
-  diffuseColor = [0.65, 0.47, 0.12];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
-
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0.01, 0.265, 0.1]);
-  modelMatrix = mat4.rotate(modelMatrix, Math.PI / 4, [1, 1, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, -0.6, [0, 0, 1]);
-  modelMatrix = mat4.rotate(modelMatrix, 0.12, [0, 1, 0]);
-  modelMatrix = mat4.rotate(modelMatrix, -0.25, [1, 0, 0]);
-  modelMatrix = mat4.scale(modelMatrix, [1.35, 0.03, 0.25]);
-
-  diffuseColor = [0.93, 0.04, 0.07];
-  renderCube(modelMatrix, viewMatrix, projectionMatrix);
-
-  modelMatrix = popMatrixFromStack(transformStack);
-
-  pushMatrixToStack(transformStack, modelMatrix);
-  modelMatrix = mat4.translate(modelMatrix, [0, 0.48, 0.1]);
-  modelMatrix = mat4.scale(modelMatrix, [0.4, 0.4, 0.4]);
-
-  diffuseColor = [0.54, 0.54, 0.67];
-  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
-  modelMatrix = popMatrixFromStack(transformStack);
+  // Render objects using helper functions
+  renderScene3Sphere1(modelMatrix);
+  renderScene3Cube1(modelMatrix);
+  renderScene3Sphere2(modelMatrix);
+  renderScene3Sphere3(modelMatrix);
+  renderScene3Cube2(modelMatrix);
+  renderScene3Cube3(modelMatrix);
+  renderScene3Sphere4(modelMatrix);
+  renderScene3Sphere5(modelMatrix);
+  renderScene3Cube4(modelMatrix);
+  renderScene3Sphere6(modelMatrix);
 }
 
 function renderAllScenes() {
@@ -331,7 +370,7 @@ function renderAllScenes() {
   gl.viewport(0, 0, viewportWidth, viewportHeight);
   gl.scissor(0, 0, viewportWidth, viewportHeight);
 
-  gl.clearColor(0.85, 0.85, 0.95, 1.0);
+  gl.clearColor(0.9, 0.9, 0.7, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   positionAttributeLocation = gl.getAttribLocation(shaderProgram, "aPosition");
@@ -374,7 +413,7 @@ function renderAllScenes() {
   gl.viewport(viewportWidth, 0, viewportWidth, viewportHeight);
   gl.scissor(viewportWidth, 0, viewportWidth, viewportHeight);
 
-  gl.clearColor(0.95, 0.85, 0.85, 1.0);
+  gl.clearColor(0.9, 0.8, 0.92, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   positionAttributeLocation = gl.getAttribLocation(shaderProgram, "aPosition");
@@ -417,7 +456,7 @@ function renderAllScenes() {
   gl.viewport(2 * viewportWidth, 0, viewportWidth, viewportHeight);
   gl.scissor(2 * viewportWidth, 0, viewportWidth, viewportHeight);
 
-  gl.clearColor(0.85, 0.95, 0.85, 1.0);
+  gl.clearColor(0.7, 0.8, 0.94, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   positionAttributeLocation = gl.getAttribLocation(shaderProgram, "aPosition");

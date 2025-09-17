@@ -41,7 +41,7 @@ void main() {
     vec3 viewVector = normalize(-vPosEyeSpace);
 
     // Calculate Phong shading ligting
-    float ambient = 0.15;
+    float ambient = 1.0;
     float diffuse = max(dot(lightVector, normal), 0.0);
     float specular = pow(max(dot(reflectionVector, viewVector), 0.0), 32.0);
 
@@ -81,7 +81,7 @@ void main() {
     // Compute Phong shading
     float diffuse = max(dot(normalEyeSpace, L), 0.0);
     float specular = pow(max(dot(-reflect(L, normalEyeSpace), V), 0.0), 32.0);
-    float ambient = 0.15;
+    float ambient = 1.0;
     fColor = uAmbientColor * ambient + uDiffuseColor * diffuse + uSpecularColor * specular;
 
     // Calculate final vertex position in clip space
@@ -153,7 +153,7 @@ void main() {
     // Compute Phong shading
     float diffuse = max(dot(normal, lightVector), 0.0);
     float specular = pow(max(dot(reflectionVector, viewVector), 0.0), 32.0);
-    float ambient = 0.15;
+    float ambient = 1.0;
     vec3 fColor = uAmbientColor * ambient + uDiffuseColor * diffuse + uSpecularColor * specular;
     fragColor = vec4(fColor, 1.0);
 }`;
