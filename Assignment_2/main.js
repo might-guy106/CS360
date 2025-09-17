@@ -1,571 +1,612 @@
-// Draw a 3D sphere in WebGL
-
-var gl;
-var canvas;
+var webGLContext;
+var renderCanvas;
 var viewportHeight;
 var viewportWidth;
 
-var matrixStack = [];
+var transformStack = [];
 
-var cubeBuf;
-var cubeIndexBuf;
-var cubeNormalBuf;
-var spBuf;
-var spIndexBuf;
-var spNormalBuf;
+var flatShadingShaderProgram;
+var gouraudShaderProgram;
+var phongShaderProgram;
+var shaderProgram;
 
-var spVerts = [];
-var spIndicies = [];
-var spNormals = [];
+var cubeVertexBuffer;
+var cubeIndexBuffer;
+var cubeNormalBuffer;
+var sphereVertexBuffer;
+var sphereIndexBuffer;
+var sphereNormalBuffer;
 
-var aPositionLocation;
-var aNormalLocation;
-var uPMatrixLocation;
-var uMMatrixLocation;
-var uVMatrixLocation;
-var normalMatrixLocation;
+var sphereVertices = [];
+var sphereIndices = [];
+var sphereNormals = [];
 
-var degree1 = 0.0;
-var degree0 = 0.0;
-var degree2 = 0.0;
-var degree3 = 0.0;
-var degree4 = 0.0;
-var degree5 = 0.0;
-var prevMouseX = 0.0;
-var prevMouseY = 0.0;
+var positionAttributeLocation;
+var normalAttributeLocation;
+var projectionMatrixUniformLocation;
+var modelMatrixUniformLocation;
+var viewMatrixUniformLocation;
+var normalMatrixUniformLocation;
+var lightPositionUniformLocation;
+var ambientColorUniformLocation;
+var diffuseColorUniformLocation;
+var specularColorUniformLocation;
 
-var scene = 0;
+var firstSceneRotationY = 0.0;
+var firstSceneRotationX = 0.0;
+var secondSceneRotationX = 0.0;
+var secondSceneRotationY = 0.0;
+var thirdSceneRotationX = 0.0;
+var thirdSceneRotationY = 0.0;
+var previousMouseX = 0.0;
+var previousMouseY = 0.0;
 
-// initialize model, view, and projection matrices
-var vMatrix = mat4.create(); // view matrix
-var mMatrix = mat4.create(); // model matrix
-var pMatrix = mat4.create(); //projection matrix
-var uNormalMatrix = mat3.create(); // normal matrix
+var currentScene = 0;
+
+var viewMatrix = mat4.create();
+var modelMatrix = mat4.create();
+var projectionMatrix = mat4.create();
+var normalMatrix = mat3.create();
 
 var lightPosition = [5, 4, 4];
 var ambientColor = [1, 1, 1];
 var diffuseColor = [1.0, 1.0, 1.0];
 var specularColor = [1.0, 1.0, 1.0];
 
-// specify camera/eye coordinate system parameters
-var eyePos = [0.0, 0.0, 2.0];
-var COI = [0.0, 0.0, 0.0];
-var viewUp = [0.0, 1.0, 0.0];
+var cameraPosition = [0.0, 0.0, 2.0];
+var lookAtTarget = [0.0, 0.0, 0.0];
+var upVector = [0.0, 1.0, 0.0];
 
-function initGL(canvas) {
+function initializeWebGL(canvas) {
   try {
-    gl = canvas.getContext("webgl2"); // the graphics webgl2 context
-    gl.viewportWidth = canvas.width; // the width of the canvas
-    gl.viewportHeight = canvas.height; // the height
+    webGLContext = canvas.getContext("webgl2");
+    webGLContext.viewportWidth = canvas.width;
+    webGLContext.viewportHeight = canvas.height;
   } catch (e) {}
-  if (!gl) {
+  if (!webGLContext) {
     alert("WebGL initialization failed");
   }
 }
 
-function degToRad(degrees) {
+function degreesToRadians(degrees) {
   return (degrees * Math.PI) / 180;
 }
 
-function pushMatrix(stack, m) {
-  //necessary because javascript only does shallow push
-  var copy = mat4.create(m);
+function pushMatrixToStack(stack, matrix) {
+  const copy = mat4.create(matrix);
   stack.push(copy);
 }
 
-function popMatrix(stack) {
+function popMatrixFromStack(stack) {
   if (stack.length > 0) return stack.pop();
   else console.log("stack has no matrix to pop!");
 }
 
-//////////////////////////////////////////////////////////////////////
-//Main drawing routine
-function drawScene1() {
-  // set up the view matrix, multiply into the modelview matrix
-  mat4.identity(vMatrix);
-  vMatrix = mat4.lookAt(eyePos, COI, viewUp, vMatrix);
+function renderFirstScene() {
+  mat4.identity(viewMatrix);
+  viewMatrix = mat4.lookAt(cameraPosition, lookAtTarget, upVector, viewMatrix);
 
-  //set up perspective projection matrix
-  mat4.identity(pMatrix);
-  mat4.perspective(50, 1.0, 0.1, 1000, pMatrix);
+  mat4.identity(projectionMatrix);
+  mat4.perspective(50, 1.0, 0.1, 1000, projectionMatrix);
 
-  //set up the model matrix
-  mat4.identity(mMatrix);
-  mat4.identity(uNormalMatrix);
+  mat4.identity(modelMatrix);
+  mat4.identity(normalMatrix);
 
-  // transformations applied here on model matrix
-  mMatrix = mat4.rotate(mMatrix, degToRad(degree0), [0, 1, 0]);
-  mMatrix = mat4.rotate(mMatrix, degToRad(degree1), [1, 0, 0]);
+  modelMatrix = mat4.rotate(
+    modelMatrix,
+    degreesToRadians(firstSceneRotationX),
+    [0, 1, 0]
+  );
+  modelMatrix = mat4.rotate(
+    modelMatrix,
+    degreesToRadians(firstSceneRotationY),
+    [1, 0, 0]
+  );
 
-  // rotation to get the default position
-  mMatrix = mat4.rotate(mMatrix, 0.5, [0, 1, 0]);
-  mMatrix = mat4.rotate(mMatrix, 0.2, [1, 0, 0]);
-  mMatrix = mat4.rotate(mMatrix, 0.1, [0, 0, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.5, [0, 1, 0]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.2, [1, 0, 0]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.1, [0, 0, 1]);
 
-  mMatrix = mat4.scale(mMatrix, [1.1, 1.1, 1.1]);
-  mMatrix = mat4.translate(mMatrix, [0, -0.1, 0]);
+  modelMatrix = mat4.scale(modelMatrix, [1.1, 1.1, 1.1]);
+  modelMatrix = mat4.translate(modelMatrix, [0, -0.1, 0]);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0, 0.5, 0]);
-  mMatrix = mat4.scale(mMatrix, [0.5, 0.5, 0.5]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0, 0.5, 0]);
+  modelMatrix = mat4.scale(modelMatrix, [0.5, 0.5, 0.5]);
 
-  // Now draw the sphere
   diffuseColor = [0, 0.35, 0.6];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0.0, -0.125, 0]);
-  mMatrix = mat4.scale(mMatrix, [0.45, 0.76, 0.5]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0.0, -0.125, 0]);
+  modelMatrix = mat4.scale(modelMatrix, [0.45, 0.76, 0.5]);
 
-  // Draw the cube
   diffuseColor = [0.68, 0.68, 0.49];
-  drawCube(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderCube(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 }
 
-function drawScene2() {
-  // set up the view matrix, multiply into the modelview matrix
-  mat4.identity(vMatrix);
-  vMatrix = mat4.lookAt(eyePos, COI, viewUp, vMatrix);
+function renderSecondScene() {
+  mat4.identity(viewMatrix);
+  viewMatrix = mat4.lookAt(cameraPosition, lookAtTarget, upVector, viewMatrix);
 
-  //set up perspective projection matrix
-  mat4.identity(pMatrix);
-  mat4.perspective(50, 1.0, 0.1, 1000, pMatrix);
+  mat4.identity(projectionMatrix);
+  mat4.perspective(50, 1.0, 0.1, 1000, projectionMatrix);
 
-  //set up the model matrix
-  mat4.identity(mMatrix);
+  mat4.identity(modelMatrix);
 
-  // transformations applied here on model matrix
-  mMatrix = mat4.rotate(mMatrix, degToRad(degree2), [0, 1, 0]);
-  mMatrix = mat4.rotate(mMatrix, degToRad(degree3), [1, 0, 0]);
+  modelMatrix = mat4.rotate(
+    modelMatrix,
+    degreesToRadians(secondSceneRotationX),
+    [0, 1, 0]
+  );
+  modelMatrix = mat4.rotate(
+    modelMatrix,
+    degreesToRadians(secondSceneRotationY),
+    [1, 0, 0]
+  );
 
-  // rotation to get the default position
-  mMatrix = mat4.rotate(mMatrix, 0.05, [0, 1, 0]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.05, [0, 1, 0]);
+  modelMatrix = mat4.scale(modelMatrix, [0.95, 0.95, 0.95]);
 
-  mMatrix = mat4.scale(mMatrix, [0.95, 0.95, 0.95]);
-
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0, -0.45, 0.1]);
-  mMatrix = mat4.scale(mMatrix, [0.7, 0.7, 0.7]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0, -0.45, 0.1]);
+  modelMatrix = mat4.scale(modelMatrix, [0.7, 0.7, 0.7]);
 
   diffuseColor = [0.73, 0.73, 0.73];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [-0.36, -0.05, 0.1]);
-  mMatrix = mat4.scale(mMatrix, [0.4, 0.4, 0.4]);
-  mMatrix = mat4.rotate(mMatrix, 0.5, [1, 0, 0]);
-  mMatrix = mat4.rotate(mMatrix, -0.45, [0, 0, 1]);
-  mMatrix = mat4.rotate(mMatrix, -0.5, [0, 1, 0]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [-0.36, -0.05, 0.1]);
+  modelMatrix = mat4.scale(modelMatrix, [0.4, 0.4, 0.4]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.5, [1, 0, 0]);
+  modelMatrix = mat4.rotate(modelMatrix, -0.45, [0, 0, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, -0.5, [0, 1, 0]);
 
   diffuseColor = [0, 0.52, 0];
-  drawCube(mMatrix, vMatrix, pMatrix);
+  renderCube(modelMatrix, viewMatrix, projectionMatrix);
 
-  mMatrix = popMatrix(matrixStack);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [-0.18, 0.24, 0.25]);
-  mMatrix = mat4.scale(mMatrix, [0.4, 0.4, 0.4]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [-0.18, 0.24, 0.25]);
+  modelMatrix = mat4.scale(modelMatrix, [0.4, 0.4, 0.4]);
 
   diffuseColor = [0.73, 0.73, 0.73];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0.095, 0.41, 0.3]);
-  mMatrix = mat4.scale(mMatrix, [0.25, 0.25, 0.25]);
-  mMatrix = mat4.rotate(mMatrix, 0.5, [1, 0, 0]);
-  mMatrix = mat4.rotate(mMatrix, 0.5, [0, 0, 1]);
-  mMatrix = mat4.rotate(mMatrix, 0.2, [0, 1, 0]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0.095, 0.41, 0.3]);
+  modelMatrix = mat4.scale(modelMatrix, [0.25, 0.25, 0.25]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.5, [1, 0, 0]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.5, [0, 0, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.2, [0, 1, 0]);
 
   diffuseColor = [0, 0.52, 0];
-  drawCube(mMatrix, vMatrix, pMatrix);
+  renderCube(modelMatrix, viewMatrix, projectionMatrix);
 
-  mMatrix = popMatrix(matrixStack);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [-0.02, 0.6, 0.4]);
-  mMatrix = mat4.scale(mMatrix, [0.25, 0.25, 0.25]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [-0.02, 0.6, 0.4]);
+  modelMatrix = mat4.scale(modelMatrix, [0.25, 0.25, 0.25]);
 
   diffuseColor = [0.73, 0.73, 0.73];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 }
 
-function drawScene3() {
-  // set up the view matrix, multiply into the modelview matrix
-  mat4.identity(vMatrix);
-  vMatrix = mat4.lookAt(eyePos, COI, viewUp, vMatrix);
+function renderThirdScene() {
+  mat4.identity(viewMatrix);
+  viewMatrix = mat4.lookAt(cameraPosition, lookAtTarget, upVector, viewMatrix);
 
-  //set up perspective projection matrix
-  mat4.identity(pMatrix);
-  mat4.perspective(50, 1.0, 0.1, 1000, pMatrix);
+  mat4.identity(projectionMatrix);
+  mat4.perspective(50, 1.0, 0.1, 1000, projectionMatrix);
 
-  //set up the model matrix
-  mat4.identity(mMatrix);
+  mat4.identity(modelMatrix);
 
-  // transformations applied here on model matrix
-  mMatrix = mat4.rotate(mMatrix, degToRad(degree4), [0, 1, 0]);
-  mMatrix = mat4.rotate(mMatrix, degToRad(degree5), [1, 0, 0]);
+  modelMatrix = mat4.rotate(
+    modelMatrix,
+    degreesToRadians(thirdSceneRotationX),
+    [0, 1, 0]
+  );
+  modelMatrix = mat4.rotate(
+    modelMatrix,
+    degreesToRadians(thirdSceneRotationY),
+    [1, 0, 0]
+  );
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0, -0.6, 0.1]);
-  mMatrix = mat4.scale(mMatrix, [0.4, 0.4, 0.4]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0, -0.6, 0.1]);
+  modelMatrix = mat4.scale(modelMatrix, [0.4, 0.4, 0.4]);
 
   diffuseColor = [0, 0.69, 0.14];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0.01, -0.38, 0.1]);
-  mMatrix = mat4.rotate(mMatrix, Math.PI / 4, [1, 1, 1]);
-  mMatrix = mat4.rotate(mMatrix, -0.6, [0, 0, 1]);
-  mMatrix = mat4.rotate(mMatrix, 0.1, [0, 1, 0]);
-  mMatrix = mat4.rotate(mMatrix, -0.1, [1, 0, 0]);
-  mMatrix = mat4.scale(mMatrix, [1.35, 0.03, 0.25]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0.01, -0.38, 0.1]);
+  modelMatrix = mat4.rotate(modelMatrix, Math.PI / 4, [1, 1, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, -0.6, [0, 0, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.1, [0, 1, 0]);
+  modelMatrix = mat4.rotate(modelMatrix, -0.1, [1, 0, 0]);
+  modelMatrix = mat4.scale(modelMatrix, [1.35, 0.03, 0.25]);
 
   diffuseColor = [0.93, 0.04, 0.07];
-  drawCube(mMatrix, vMatrix, pMatrix);
+  renderCube(modelMatrix, viewMatrix, projectionMatrix);
 
-  mMatrix = popMatrix(matrixStack);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [-0.35, -0.21, 0.4]);
-  mMatrix = mat4.scale(mMatrix, [0.3, 0.3, 0.3]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [-0.35, -0.21, 0.4]);
+  modelMatrix = mat4.scale(modelMatrix, [0.3, 0.3, 0.3]);
 
   diffuseColor = [0.26, 0.27, 0.53];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0.35, -0.21, -0.2]);
-  mMatrix = mat4.scale(mMatrix, [0.3, 0.3, 0.3]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0.35, -0.21, -0.2]);
+  modelMatrix = mat4.scale(modelMatrix, [0.3, 0.3, 0.3]);
 
   diffuseColor = [0.1, 0.32, 0.3];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [-0.35, -0.07, 0.45]);
-  mMatrix = mat4.rotate(mMatrix, (3 * Math.PI) / 4, [1, 1, 1]);
-  mMatrix = mat4.rotate(mMatrix, -1.45, [0, 0, 1]);
-  mMatrix = mat4.rotate(mMatrix, 0.6, [0, 1, 0]);
-  mMatrix = mat4.rotate(mMatrix, 0.1, [1, 0, 0]);
-  mMatrix = mat4.scale(mMatrix, [0.6, 0.03, 0.3]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [-0.35, -0.07, 0.45]);
+  modelMatrix = mat4.rotate(modelMatrix, (3 * Math.PI) / 4, [1, 1, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, -1.45, [0, 0, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.6, [0, 1, 0]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.1, [1, 0, 0]);
+  modelMatrix = mat4.scale(modelMatrix, [0.6, 0.03, 0.3]);
 
   diffuseColor = [0.7, 0.6, 0.0];
-  drawCube(mMatrix, vMatrix, pMatrix);
+  renderCube(modelMatrix, viewMatrix, projectionMatrix);
 
-  mMatrix = popMatrix(matrixStack);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0.35, -0.07, -0.2]);
-  mMatrix = mat4.rotate(mMatrix, (3 * Math.PI) / 4, [1, 1, 1]);
-  mMatrix = mat4.rotate(mMatrix, -1.45, [0, 0, 1]);
-  mMatrix = mat4.rotate(mMatrix, 0.6, [0, 1, 0]);
-  mMatrix = mat4.rotate(mMatrix, 0.1, [1, 0, 0]);
-  mMatrix = mat4.scale(mMatrix, [0.6, 0.03, 0.3]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0.35, -0.07, -0.2]);
+  modelMatrix = mat4.rotate(modelMatrix, (3 * Math.PI) / 4, [1, 1, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, -1.45, [0, 0, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.6, [0, 1, 0]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.1, [1, 0, 0]);
+  modelMatrix = mat4.scale(modelMatrix, [0.6, 0.03, 0.3]);
 
   diffuseColor = [0.18, 0.62, 0];
-  drawCube(mMatrix, vMatrix, pMatrix);
+  renderCube(modelMatrix, viewMatrix, projectionMatrix);
 
-  mMatrix = popMatrix(matrixStack);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [-0.35, 0.1, 0.4]);
-  mMatrix = mat4.scale(mMatrix, [0.3, 0.3, 0.3]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [-0.35, 0.1, 0.4]);
+  modelMatrix = mat4.scale(modelMatrix, [0.3, 0.3, 0.3]);
 
   diffuseColor = [0.69, 0, 0.69];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0.35, 0.1, -0.2]);
-  mMatrix = mat4.scale(mMatrix, [0.3, 0.3, 0.3]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0.35, 0.1, -0.2]);
+  modelMatrix = mat4.scale(modelMatrix, [0.3, 0.3, 0.3]);
 
   diffuseColor = [0.65, 0.47, 0.12];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0.01, 0.265, 0.1]);
-  mMatrix = mat4.rotate(mMatrix, Math.PI / 4, [1, 1, 1]);
-  mMatrix = mat4.rotate(mMatrix, -0.6, [0, 0, 1]);
-  mMatrix = mat4.rotate(mMatrix, 0.12, [0, 1, 0]);
-  mMatrix = mat4.rotate(mMatrix, -0.25, [1, 0, 0]);
-  mMatrix = mat4.scale(mMatrix, [1.35, 0.03, 0.25]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0.01, 0.265, 0.1]);
+  modelMatrix = mat4.rotate(modelMatrix, Math.PI / 4, [1, 1, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, -0.6, [0, 0, 1]);
+  modelMatrix = mat4.rotate(modelMatrix, 0.12, [0, 1, 0]);
+  modelMatrix = mat4.rotate(modelMatrix, -0.25, [1, 0, 0]);
+  modelMatrix = mat4.scale(modelMatrix, [1.35, 0.03, 0.25]);
 
   diffuseColor = [0.93, 0.04, 0.07];
-  drawCube(mMatrix, vMatrix, pMatrix);
+  renderCube(modelMatrix, viewMatrix, projectionMatrix);
 
-  mMatrix = popMatrix(matrixStack);
+  modelMatrix = popMatrixFromStack(transformStack);
 
-  pushMatrix(matrixStack, mMatrix);
-  mMatrix = mat4.translate(mMatrix, [0, 0.48, 0.1]);
-  mMatrix = mat4.scale(mMatrix, [0.4, 0.4, 0.4]);
+  pushMatrixToStack(transformStack, modelMatrix);
+  modelMatrix = mat4.translate(modelMatrix, [0, 0.48, 0.1]);
+  modelMatrix = mat4.scale(modelMatrix, [0.4, 0.4, 0.4]);
 
   diffuseColor = [0.54, 0.54, 0.67];
-  drawSphere(mMatrix, vMatrix, pMatrix);
-  mMatrix = popMatrix(matrixStack);
+  renderSphere(modelMatrix, viewMatrix, projectionMatrix);
+  modelMatrix = popMatrixFromStack(transformStack);
 }
 
-function drawScene() {
-  viewportHeight = canvas.height;
-  viewportWidth = canvas.width / 3;
-  // You need to enable scissor_test to be able to use multiple viewports
-  gl.enable(gl.SCISSOR_TEST);
+function renderAllScenes() {
+  viewportHeight = renderCanvas.height;
+  viewportWidth = renderCanvas.width / 3;
+  webGLContext.enable(webGLContext.SCISSOR_TEST);
 
-  // Now define 3 different viewport areas for drawing
+  shaderProgram = flatShadingShaderProgram;
+  webGLContext.useProgram(shaderProgram);
 
-  ////////////////////////////////////////
-  // Left viewport area
-  shaderProgram = flatShaderProgram;
-  gl.useProgram(shaderProgram);
+  webGLContext.viewport(0, 0, viewportWidth, viewportHeight);
+  webGLContext.scissor(0, 0, viewportWidth, viewportHeight);
 
-  gl.viewport(0, 0, viewportWidth, viewportHeight);
-  gl.scissor(0, 0, viewportWidth, viewportHeight);
+  webGLContext.clearColor(0.85, 0.85, 0.95, 1.0);
+  webGLContext.clear(
+    webGLContext.COLOR_BUFFER_BIT | webGLContext.DEPTH_BUFFER_BIT
+  );
 
-  gl.clearColor(0.85, 0.85, 0.95, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-  //get locations of attributes and uniforms declared in the shader
-  aPositionLocation = gl.getAttribLocation(shaderProgram, "aPosition");
-  aNormalLocation = gl.getAttribLocation(shaderProgram, "aNormal");
-  uMMatrixLocation = gl.getUniformLocation(shaderProgram, "uMMatrix");
-  uVMatrixLocation = gl.getUniformLocation(shaderProgram, "uVMatrix");
-  uPMatrixLocation = gl.getUniformLocation(shaderProgram, "uPMatrix");
-  uLightPositionLocation = gl.getUniformLocation(
+  positionAttributeLocation = webGLContext.getAttribLocation(
+    shaderProgram,
+    "aPosition"
+  );
+  normalAttributeLocation = webGLContext.getAttribLocation(
+    shaderProgram,
+    "aNormal"
+  );
+  modelMatrixUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uMMatrix"
+  );
+  viewMatrixUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uVMatrix"
+  );
+  projectionMatrixUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uPMatrix"
+  );
+  lightPositionUniformLocation = webGLContext.getUniformLocation(
     shaderProgram,
     "uLightPosition"
   );
-  uAmbientColorLocation = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-  uDiffuseColorLocation = gl.getUniformLocation(shaderProgram, "uDiffuseColor");
-  uSpecularColorLocation = gl.getUniformLocation(
+  ambientColorUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uAmbientColor"
+  );
+  diffuseColorUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uDiffuseColor"
+  );
+  specularColorUniformLocation = webGLContext.getUniformLocation(
     shaderProgram,
     "uSpecularColor"
   );
 
-  //enable the attribute arrays
-  gl.enableVertexAttribArray(aPositionLocation);
-  gl.enableVertexAttribArray(aNormalLocation);
+  webGLContext.enableVertexAttribArray(positionAttributeLocation);
+  webGLContext.enableVertexAttribArray(normalAttributeLocation);
 
-  //initialize buffers for the sphere
-  initSphereBuffer();
-  initCubeBuffer();
+  initializeSphereBuffers();
+  initializeCubeBuffers();
 
-  gl.enable(gl.DEPTH_TEST);
-  drawScene1();
+  webGLContext.enable(webGLContext.DEPTH_TEST);
+  renderFirstScene();
 
-  ////////////////////////////////////////
-  // Mid viewport area
-  shaderProgram = perVertShaderProgram;
-  gl.useProgram(shaderProgram);
+  shaderProgram = gouraudShaderProgram;
+  webGLContext.useProgram(shaderProgram);
 
-  gl.viewport(viewportWidth, 0, viewportWidth, viewportHeight);
-  gl.scissor(viewportWidth, 0, viewportWidth, viewportHeight);
+  webGLContext.viewport(viewportWidth, 0, viewportWidth, viewportHeight);
+  webGLContext.scissor(viewportWidth, 0, viewportWidth, viewportHeight);
 
-  gl.clearColor(0.95, 0.85, 0.85, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  webGLContext.clearColor(0.95, 0.85, 0.85, 1.0);
+  webGLContext.clear(
+    webGLContext.COLOR_BUFFER_BIT | webGLContext.DEPTH_BUFFER_BIT
+  );
 
-  //get locations of attributes and uniforms declared in the shader
-  aPositionLocation = gl.getAttribLocation(shaderProgram, "aPosition");
-  aNormalLocation = gl.getAttribLocation(shaderProgram, "aNormal");
-  uMMatrixLocation = gl.getUniformLocation(shaderProgram, "uMMatrix");
-  uVMatrixLocation = gl.getUniformLocation(shaderProgram, "uVMatrix");
-  uPMatrixLocation = gl.getUniformLocation(shaderProgram, "uPMatrix");
-  uLightPositionLocation = gl.getUniformLocation(
+  positionAttributeLocation = webGLContext.getAttribLocation(
+    shaderProgram,
+    "aPosition"
+  );
+  normalAttributeLocation = webGLContext.getAttribLocation(
+    shaderProgram,
+    "aNormal"
+  );
+  modelMatrixUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uMMatrix"
+  );
+  viewMatrixUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uVMatrix"
+  );
+  projectionMatrixUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uPMatrix"
+  );
+  lightPositionUniformLocation = webGLContext.getUniformLocation(
     shaderProgram,
     "uLightPosition"
   );
-  uAmbientColorLocation = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-  uDiffuseColorLocation = gl.getUniformLocation(shaderProgram, "uDiffuseColor");
-  uSpecularColorLocation = gl.getUniformLocation(
+  ambientColorUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uAmbientColor"
+  );
+  diffuseColorUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uDiffuseColor"
+  );
+  specularColorUniformLocation = webGLContext.getUniformLocation(
     shaderProgram,
     "uSpecularColor"
   );
 
-  //enable the attribute arrays
-  gl.enableVertexAttribArray(aPositionLocation);
-  gl.enableVertexAttribArray(aNormalLocation);
+  webGLContext.enableVertexAttribArray(positionAttributeLocation);
+  webGLContext.enableVertexAttribArray(normalAttributeLocation);
 
-  //initialize buffers for the sphere
-  initSphereBuffer();
-  initCubeBuffer();
+  initializeSphereBuffers();
+  initializeCubeBuffers();
 
-  gl.enable(gl.DEPTH_TEST);
-  drawScene2();
+  webGLContext.enable(webGLContext.DEPTH_TEST);
+  renderSecondScene();
 
-  ////////////////////////////////////////
-  // Right viewport area
-  shaderProgram = perFragShaderProgram;
-  gl.useProgram(shaderProgram);
+  shaderProgram = phongShaderProgram;
+  webGLContext.useProgram(shaderProgram);
 
-  gl.viewport(2 * viewportWidth, 0, viewportWidth, viewportHeight);
-  gl.scissor(2 * viewportWidth, 0, viewportWidth, viewportHeight);
+  webGLContext.viewport(2 * viewportWidth, 0, viewportWidth, viewportHeight);
+  webGLContext.scissor(2 * viewportWidth, 0, viewportWidth, viewportHeight);
 
-  gl.clearColor(0.85, 0.95, 0.85, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  webGLContext.clearColor(0.85, 0.95, 0.85, 1.0);
+  webGLContext.clear(
+    webGLContext.COLOR_BUFFER_BIT | webGLContext.DEPTH_BUFFER_BIT
+  );
 
-  //get locations of attributes and uniforms declared in the shader
-  aPositionLocation = gl.getAttribLocation(shaderProgram, "aPosition");
-  aNormalLocation = gl.getAttribLocation(shaderProgram, "aNormal");
-  uMMatrixLocation = gl.getUniformLocation(shaderProgram, "uMMatrix");
-  uVMatrixLocation = gl.getUniformLocation(shaderProgram, "uVMatrix");
-  uPMatrixLocation = gl.getUniformLocation(shaderProgram, "uPMatrix");
-  uLightPositionLocation = gl.getUniformLocation(
+  positionAttributeLocation = webGLContext.getAttribLocation(
+    shaderProgram,
+    "aPosition"
+  );
+  normalAttributeLocation = webGLContext.getAttribLocation(
+    shaderProgram,
+    "aNormal"
+  );
+  modelMatrixUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uMMatrix"
+  );
+  viewMatrixUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uVMatrix"
+  );
+  projectionMatrixUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uPMatrix"
+  );
+  lightPositionUniformLocation = webGLContext.getUniformLocation(
     shaderProgram,
     "uLightPosition"
   );
-  uAmbientColorLocation = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-  uDiffuseColorLocation = gl.getUniformLocation(shaderProgram, "uDiffuseColor");
-  uSpecularColorLocation = gl.getUniformLocation(
+  ambientColorUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uAmbientColor"
+  );
+  diffuseColorUniformLocation = webGLContext.getUniformLocation(
+    shaderProgram,
+    "uDiffuseColor"
+  );
+  specularColorUniformLocation = webGLContext.getUniformLocation(
     shaderProgram,
     "uSpecularColor"
   );
 
-  //enable the attribute arrays
-  gl.enableVertexAttribArray(aPositionLocation);
-  gl.enableVertexAttribArray(aNormalLocation);
+  webGLContext.enableVertexAttribArray(positionAttributeLocation);
+  webGLContext.enableVertexAttribArray(normalAttributeLocation);
 
-  //initialize buffers for the sphere
-  initSphereBuffer();
-  initCubeBuffer();
+  initializeSphereBuffers();
+  initializeCubeBuffers();
 
-  gl.enable(gl.DEPTH_TEST);
-  drawScene3();
+  webGLContext.enable(webGLContext.DEPTH_TEST);
+  renderThirdScene();
 }
 
-function onMouseDown(event) {
-  document.addEventListener("mousemove", onMouseMove, false);
-  document.addEventListener("mouseup", onMouseUp, false);
-  document.addEventListener("mouseout", onMouseOut, false);
+function handleMouseDown(event) {
+  document.addEventListener("mousemove", handleMouseMove, false);
+  document.addEventListener("mouseup", handleMouseUp, false);
+  document.addEventListener("mouseout", handleMouseOut, false);
 
-  // Get canvas bounding rectangle to account for its position on the page
-  var canvasRect = canvas.getBoundingClientRect();
-
-  // Calculate mouse position relative to canvas
-  var mouseX = event.clientX - canvasRect.left;
-  var mouseY = canvasRect.bottom - event.clientY;
+  const canvasRect = renderCanvas.getBoundingClientRect();
+  const mouseX = event.clientX - canvasRect.left;
+  const mouseY = canvasRect.bottom - event.clientY;
 
   if (
     mouseX >= 0 &&
-    mouseX <= canvas.width &&
+    mouseX <= renderCanvas.width &&
     mouseY >= 0 &&
-    mouseY <= canvas.height
+    mouseY <= renderCanvas.height
   ) {
-    prevMouseX = mouseX;
-    prevMouseY = mouseY;
+    previousMouseX = mouseX;
+    previousMouseY = mouseY;
 
-    var yLim = mouseY <= viewportHeight && mouseY >= 0;
-    if (mouseX >= 0 && mouseX <= viewportWidth && yLim) scene = 1;
+    const yLim = mouseY <= viewportHeight && mouseY >= 0;
+    if (mouseX >= 0 && mouseX <= viewportWidth && yLim) currentScene = 1;
     else if (mouseX >= viewportWidth && mouseX <= viewportWidth * 2 && yLim)
-      scene = 2;
+      currentScene = 2;
     else if (mouseX >= viewportWidth * 2 && mouseX <= viewportWidth * 3 && yLim)
-      scene = 3;
+      currentScene = 3;
   }
 }
 
-function onMouseMove(event) {
-  // make mouse interaction only within canvas
+function handleMouseMove(event) {
+  const canvasRect = renderCanvas.getBoundingClientRect();
+  const mouseX = event.clientX - canvasRect.left;
+  const mouseY = canvasRect.bottom - event.clientY;
 
-  // Get canvas bounding rectangle to account for its position on the page
-  var canvasRect = canvas.getBoundingClientRect();
+  const diffX1 = mouseX - previousMouseX;
+  const diffY2 = mouseY - previousMouseY;
 
-  // Calculate mouse position relative to canvas
-  var mouseX = event.clientX - canvasRect.left;
-  var mouseY = canvasRect.bottom - event.clientY; // Flip Y coordinate for WebGL
+  previousMouseX = mouseX;
+  previousMouseY = mouseY;
 
-  var diffX1 = mouseX - prevMouseX;
-  var diffY2 = mouseY - prevMouseY;
-
-  prevMouseX = mouseX;
-  prevMouseY = mouseY;
-
-  var yLim = mouseY <= viewportHeight && mouseY >= 0;
-  if (mouseX >= 0 && mouseX <= viewportWidth && yLim && scene == 1) {
-    degree0 = degree0 + diffX1 / 5;
-    degree1 = degree1 - diffY2 / 5;
+  const yLim = mouseY <= viewportHeight && mouseY >= 0;
+  if (mouseX >= 0 && mouseX <= viewportWidth && yLim && currentScene == 1) {
+    firstSceneRotationX = firstSceneRotationX + diffX1 / 5;
+    firstSceneRotationY = firstSceneRotationY - diffY2 / 5;
   } else if (
     mouseX >= viewportWidth &&
     mouseX <= viewportWidth * 2 &&
     yLim &&
-    scene == 2
+    currentScene == 2
   ) {
-    degree2 = degree2 + diffX1 / 5;
-    degree3 = degree3 - diffY2 / 5;
+    secondSceneRotationX = secondSceneRotationX + diffX1 / 5;
+    secondSceneRotationY = secondSceneRotationY - diffY2 / 5;
   } else if (
     mouseX >= viewportWidth * 2 &&
     mouseX <= viewportWidth * 3 &&
     yLim &&
-    scene == 3
+    currentScene == 3
   ) {
-    degree4 = degree4 + diffX1 / 5;
-    degree5 = degree5 - diffY2 / 5;
+    thirdSceneRotationX = thirdSceneRotationX + diffX1 / 5;
+    thirdSceneRotationY = thirdSceneRotationY - diffY2 / 5;
   }
-  drawScene();
+  renderAllScenes();
 }
 
-function onMouseUp(event) {
-  document.removeEventListener("mousemove", onMouseMove, false);
-  document.removeEventListener("mouseup", onMouseUp, false);
-  document.removeEventListener("mouseout", onMouseOut, false);
+function handleMouseUp(event) {
+  document.removeEventListener("mousemove", handleMouseMove, false);
+  document.removeEventListener("mouseup", handleMouseUp, false);
+  document.removeEventListener("mouseout", handleMouseOut, false);
 }
 
-function onMouseOut(event) {
-  document.removeEventListener("mousemove", onMouseMove, false);
-  document.removeEventListener("mouseup", onMouseUp, false);
-  document.removeEventListener("mouseout", onMouseOut, false);
+function handleMouseOut(event) {
+  document.removeEventListener("mousemove", handleMouseMove, false);
+  document.removeEventListener("mouseup", handleMouseUp, false);
+  document.removeEventListener("mouseout", handleMouseOut, false);
 }
 
-function webGLStart() {
-  canvas = document.getElementById("assn2");
-  document.addEventListener("mousedown", onMouseDown, false);
+function initializeApplication() {
+  renderCanvas = document.getElementById("webglCanvas");
+  document.addEventListener("mousedown", handleMouseDown, false);
 
-  // Get the light slider element
-  const lightSlider = document.getElementById("light-slider");
+  const lightPositionSlider = document.getElementById("lightPositionSlider");
+  let lightX = parseFloat(lightPositionSlider.value);
 
-  // Initialize light position
-  let lightX = parseFloat(lightSlider.value);
-
-  // Update light position when the slider changes
-  lightSlider.addEventListener("input", (event) => {
+  lightPositionSlider.addEventListener("input", (event) => {
     lightX = parseFloat(event.target.value);
     lightPosition = [lightX, 3.0, 4.0];
-
-    // Redraw the scene
-    drawScene();
+    renderAllScenes();
   });
 
-  // Get the camera slider element
-  const cameraSlider = document.getElementById("camera-slider");
+  const cameraZoomSlider = document.getElementById("cameraZoomSlider");
+  let cameraZ = parseFloat(cameraZoomSlider.value);
 
-  // Initialize camera position
-  let cameraZ = parseFloat(cameraSlider.value);
-
-  // Update camera position when the slider changes
-  cameraSlider.addEventListener("input", (event) => {
+  cameraZoomSlider.addEventListener("input", (event) => {
     cameraZ = parseFloat(event.target.value);
-    eyePos = [0.0, 0.0, cameraZ];
-
-    // Redraw the scene
-    drawScene();
+    cameraPosition = [0.0, 0.0, cameraZ];
+    renderAllScenes();
   });
 
-  // initialize WebGL
-  initGL(canvas);
+  initializeWebGL(renderCanvas);
 
-  // initialize shader program
-  flatShaderProgram = initShaders(flatVertexShaderCode, flatFragShaderCode);
-  perVertShaderProgram = initShaders(
-    perVertVertexShaderCode,
-    perVertFragShaderCode
+  flatShadingShaderProgram = createShaderProgram(
+    flatShadingVertexShader,
+    flatShadingFragmentShader
   );
-  perFragShaderProgram = initShaders(
-    perFragVertexShaderCode,
-    perFragFragShaderCode
+  gouraudShaderProgram = createShaderProgram(
+    gouraudVertexShader,
+    gouraudFragmentShader
+  );
+  phongShaderProgram = createShaderProgram(
+    phongVertexShader,
+    phongFragmentShader
   );
 
-  drawScene();
+  renderAllScenes();
 }

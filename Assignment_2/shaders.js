@@ -1,8 +1,4 @@
-/////////////////////////////////////
-// Flat Shading
-
-// Vertex shader code
-const flatVertexShaderCode = `#version 300 es
+const flatShadingVertexShader = `#version 300 es
 in vec3 aPosition;
 in vec3 aNormal;
 uniform mat4 uMMatrix;
@@ -20,8 +16,7 @@ void main() {
     vPosEyeSpace = (uVMatrix * uMMatrix * vec4(aPosition, 1.0)).xyz;
 }`;
 
-// Fragment shader code
-const flatFragShaderCode = `#version 300 es
+const flatShadingFragmentShader = `#version 300 es
 precision mediump float;
 in vec3 vPosEyeSpace;
 uniform vec3 uLightPosition;
@@ -57,11 +52,7 @@ void main() {
     fragColor = vec4(light_color, 1.0);
 }`;
 
-/////////////////////////////////////
-// Gouraud Shading
-
-// Vertex shader code
-const perVertVertexShaderCode = `#version 300 es
+const gouraudVertexShader = `#version 300 es
 in vec3 aPosition;
 in vec3 aNormal;
 uniform mat4 uMMatrix;
@@ -97,8 +88,7 @@ void main() {
     gl_Position = uPMatrix * uVMatrix * uMMatrix * vec4(aPosition, 1.0);
 }`;
 
-// Fragment shader code
-const perVertFragShaderCode = `#version 300 es
+const gouraudFragmentShader = `#version 300 es
 precision mediump float;
 in vec3 fColor;
 out vec4 fragColor;
@@ -107,11 +97,7 @@ void main() {
     fragColor = vec4(fColor, 1.0);
 }`;
 
-/////////////////////////////////////
-// Phong Shading
-
-// Vertex shader code
-const perFragVertexShaderCode = `#version 300 es
+const phongVertexShader = `#version 300 es
 in vec3 aPosition;
 in vec3 aNormal;
 uniform mat4 uMMatrix;
@@ -142,8 +128,7 @@ void main() {
     gl_Position = uPMatrix * uVMatrix * uMMatrix * vec4(aPosition, 1.0);
 }`;
 
-// Fragment shader code
-const perFragFragShaderCode = `#version 300 es
+const phongFragmentShader = `#version 300 es
 precision mediump float;
 out vec4 fragColor;
 
@@ -173,50 +158,45 @@ void main() {
     fragColor = vec4(fColor, 1.0);
 }`;
 
-function vertexShaderSetup(vertexShaderCode) {
-  shader = gl.createShader(gl.VERTEX_SHADER);
-  gl.shaderSource(shader, vertexShaderCode);
-  gl.compileShader(shader);
-  // Error check whether the shader is compiled correctly
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    alert(gl.getShaderInfoLog(shader));
+function compileVertexShader(vertexShaderCode) {
+  const shader = webGLContext.createShader(webGLContext.VERTEX_SHADER);
+  webGLContext.shaderSource(shader, vertexShaderCode);
+  webGLContext.compileShader(shader);
+  if (!webGLContext.getShaderParameter(shader, webGLContext.COMPILE_STATUS)) {
+    alert(webGLContext.getShaderInfoLog(shader));
     return null;
   }
   return shader;
 }
 
-function fragmentShaderSetup(fragShaderCode) {
-  shader = gl.createShader(gl.FRAGMENT_SHADER);
-  gl.shaderSource(shader, fragShaderCode);
-  gl.compileShader(shader);
-  // Error check whether the shader is compiled correctly
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    alert(gl.getShaderInfoLog(shader));
+function compileFragmentShader(fragmentShaderCode) {
+  const shader = webGLContext.createShader(webGLContext.FRAGMENT_SHADER);
+  webGLContext.shaderSource(shader, fragmentShaderCode);
+  webGLContext.compileShader(shader);
+  if (!webGLContext.getShaderParameter(shader, webGLContext.COMPILE_STATUS)) {
+    alert(webGLContext.getShaderInfoLog(shader));
     return null;
   }
   return shader;
 }
 
-function initShaders(vertexShaderCode, fragShaderCode) {
-  shaderProgram = gl.createProgram();
+function createShaderProgram(vertexShaderCode, fragmentShaderCode) {
+  const shaderProgram = webGLContext.createProgram();
 
-  var vertexShader = vertexShaderSetup(vertexShaderCode);
-  var fragmentShader = fragmentShaderSetup(fragShaderCode);
+  const vertexShader = compileVertexShader(vertexShaderCode);
+  const fragmentShader = compileFragmentShader(fragmentShaderCode);
 
-  // attach the shaders
-  gl.attachShader(shaderProgram, vertexShader);
-  gl.attachShader(shaderProgram, fragmentShader);
-  //link the shader program
-  gl.linkProgram(shaderProgram);
+  webGLContext.attachShader(shaderProgram, vertexShader);
+  webGLContext.attachShader(shaderProgram, fragmentShader);
+  webGLContext.linkProgram(shaderProgram);
 
-  // check for compilation and linking status
-  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-    console.log(gl.getShaderInfoLog(vertexShader));
-    console.log(gl.getShaderInfoLog(fragmentShader));
+  if (
+    !webGLContext.getProgramParameter(shaderProgram, webGLContext.LINK_STATUS)
+  ) {
+    console.log(webGLContext.getShaderInfoLog(vertexShader));
+    console.log(webGLContext.getShaderInfoLog(fragmentShader));
   }
 
-  //finally use the program.
-  gl.useProgram(shaderProgram);
-
+  webGLContext.useProgram(shaderProgram);
   return shaderProgram;
 }

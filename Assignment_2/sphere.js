@@ -1,134 +1,144 @@
-// Sphere geometry and drawing functions
+var sphereVertexBuffer;
+var sphereIndexBuffer;
+var sphereNormalBuffer;
+var sphereVertices = [];
+var sphereIndices = [];
+var sphereNormals = [];
 
-var spBuf;
-var spIndexBuf;
-var spNormalBuf;
-var spVerts = [];
-var spIndicies = [];
-var spNormals = [];
+function generateSphereGeometry(sliceCount, stackCount, radius) {
+  let theta1, theta2;
 
-function initSphere(nslices, nstacks, radius) {
-  var theta1, theta2;
+  for (let i = 0; i < sliceCount; i++) {
+    sphereVertices.push(0);
+    sphereVertices.push(-radius);
+    sphereVertices.push(0);
 
-  for (i = 0; i < nslices; i++) {
-    spVerts.push(0);
-    spVerts.push(-radius);
-    spVerts.push(0);
-
-    spNormals.push(0);
-    spNormals.push(-1.0);
-    spNormals.push(0);
+    sphereNormals.push(0);
+    sphereNormals.push(-1.0);
+    sphereNormals.push(0);
   }
 
-  for (j = 1; j < nstacks - 1; j++) {
-    theta1 = (j * 2 * Math.PI) / nslices - Math.PI / 2;
-    for (i = 0; i < nslices; i++) {
-      theta2 = (i * 2 * Math.PI) / nslices;
-      spVerts.push(radius * Math.cos(theta1) * Math.cos(theta2));
-      spVerts.push(radius * Math.sin(theta1));
-      spVerts.push(radius * Math.cos(theta1) * Math.sin(theta2));
+  for (let j = 1; j < stackCount - 1; j++) {
+    theta1 = (j * 2 * Math.PI) / sliceCount - Math.PI / 2;
+    for (let i = 0; i < sliceCount; i++) {
+      theta2 = (i * 2 * Math.PI) / sliceCount;
+      sphereVertices.push(radius * Math.cos(theta1) * Math.cos(theta2));
+      sphereVertices.push(radius * Math.sin(theta1));
+      sphereVertices.push(radius * Math.cos(theta1) * Math.sin(theta2));
 
-      spNormals.push(Math.cos(theta1) * Math.cos(theta2));
-      spNormals.push(Math.sin(theta1));
-      spNormals.push(Math.cos(theta1) * Math.sin(theta2));
+      sphereNormals.push(Math.cos(theta1) * Math.cos(theta2));
+      sphereNormals.push(Math.sin(theta1));
+      sphereNormals.push(Math.cos(theta1) * Math.sin(theta2));
     }
   }
 
-  for (i = 0; i < nslices; i++) {
-    spVerts.push(0);
-    spVerts.push(radius);
-    spVerts.push(0);
+  for (let i = 0; i < sliceCount; i++) {
+    sphereVertices.push(0);
+    sphereVertices.push(radius);
+    sphereVertices.push(0);
 
-    spNormals.push(0);
-    spNormals.push(1.0);
-    spNormals.push(0);
+    sphereNormals.push(0);
+    sphereNormals.push(1.0);
+    sphereNormals.push(0);
   }
 
-  // setup the connectivity and indices
-  for (j = 0; j < nstacks - 1; j++) {
-    for (i = 0; i <= nslices; i++) {
-      var mi = i % nslices;
-      var mi2 = (i + 1) % nslices;
-      var idx = (j + 1) * nslices + mi;
-      var idx2 = j * nslices + mi;
-      var idx3 = j * nslices + mi2;
-      var idx4 = (j + 1) * nslices + mi;
-      var idx5 = j * nslices + mi2;
-      var idx6 = (j + 1) * nslices + mi2;
+  for (let j = 0; j < stackCount - 1; j++) {
+    for (let i = 0; i <= sliceCount; i++) {
+      const mi = i % sliceCount;
+      const mi2 = (i + 1) % sliceCount;
+      const idx = (j + 1) * sliceCount + mi;
+      const idx2 = j * sliceCount + mi;
+      const idx3 = j * sliceCount + mi2;
+      const idx4 = (j + 1) * sliceCount + mi;
+      const idx5 = j * sliceCount + mi2;
+      const idx6 = (j + 1) * sliceCount + mi2;
 
-      spIndicies.push(idx);
-      spIndicies.push(idx2);
-      spIndicies.push(idx3);
-      spIndicies.push(idx4);
-      spIndicies.push(idx5);
-      spIndicies.push(idx6);
+      sphereIndices.push(idx);
+      sphereIndices.push(idx2);
+      sphereIndices.push(idx3);
+      sphereIndices.push(idx4);
+      sphereIndices.push(idx5);
+      sphereIndices.push(idx6);
     }
   }
 }
 
-function initSphereBuffer() {
-  var nslices = 30; // use even number
-  var nstacks = nslices / 2 + 1;
-  var radius = 0.5;
-  initSphere(nslices, nstacks, radius);
+function initializeSphereBuffers() {
+  const sliceCount = 30;
+  const stackCount = sliceCount / 2 + 1;
+  const radius = 0.5;
+  generateSphereGeometry(sliceCount, stackCount, radius);
 
-  spBuf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, spBuf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spVerts), gl.STATIC_DRAW);
-  spBuf.itemSize = 3;
-  spBuf.numItems = nslices * nstacks;
-
-  spNormalBuf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, spNormalBuf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spNormals), gl.STATIC_DRAW);
-  spNormalBuf.itemSize = 3;
-  spNormalBuf.numItems = nslices * nstacks;
-
-  spIndexBuf = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, spIndexBuf);
-  gl.bufferData(
-    gl.ELEMENT_ARRAY_BUFFER,
-    new Uint32Array(spIndicies),
-    gl.STATIC_DRAW
+  sphereVertexBuffer = webGLContext.createBuffer();
+  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, sphereVertexBuffer);
+  webGLContext.bufferData(
+    webGLContext.ARRAY_BUFFER,
+    new Float32Array(sphereVertices),
+    webGLContext.STATIC_DRAW
   );
-  spIndexBuf.itemsize = 1;
-  spIndexBuf.numItems = (nstacks - 1) * 6 * (nslices + 1);
+  sphereVertexBuffer.itemSize = 3;
+  sphereVertexBuffer.numItems = sliceCount * stackCount;
+
+  sphereNormalBuffer = webGLContext.createBuffer();
+  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, sphereNormalBuffer);
+  webGLContext.bufferData(
+    webGLContext.ARRAY_BUFFER,
+    new Float32Array(sphereNormals),
+    webGLContext.STATIC_DRAW
+  );
+  sphereNormalBuffer.itemSize = 3;
+  sphereNormalBuffer.numItems = sliceCount * stackCount;
+
+  sphereIndexBuffer = webGLContext.createBuffer();
+  webGLContext.bindBuffer(webGLContext.ELEMENT_ARRAY_BUFFER, sphereIndexBuffer);
+  webGLContext.bufferData(
+    webGLContext.ELEMENT_ARRAY_BUFFER,
+    new Uint32Array(sphereIndices),
+    webGLContext.STATIC_DRAW
+  );
+  sphereIndexBuffer.itemsize = 1;
+  sphereIndexBuffer.numItems = (stackCount - 1) * 6 * (sliceCount + 1);
 }
 
-function drawSphere(mMatrix, vMatrix, pMatrix) {
-  // bind the vertex buffer
-  gl.bindBuffer(gl.ARRAY_BUFFER, spBuf);
-  gl.vertexAttribPointer(
-    aPositionLocation,
-    spBuf.itemSize,
-    gl.FLOAT,
+function renderSphere(modelMatrix, viewMatrix, projectionMatrix) {
+  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, sphereVertexBuffer);
+  webGLContext.vertexAttribPointer(
+    positionAttributeLocation,
+    sphereVertexBuffer.itemSize,
+    webGLContext.FLOAT,
     false,
     0,
     0
   );
 
-  // bind the normal buffer
-  gl.bindBuffer(gl.ARRAY_BUFFER, spNormalBuf);
-  gl.vertexAttribPointer(
-    aNormalLocation,
-    spNormalBuf.itemSize,
-    gl.FLOAT,
+  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, sphereNormalBuffer);
+  webGLContext.vertexAttribPointer(
+    normalAttributeLocation,
+    sphereNormalBuffer.itemSize,
+    webGLContext.FLOAT,
     false,
     0,
     0
   );
 
-  // bind the index buffer
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, spIndexBuf);
+  webGLContext.bindBuffer(webGLContext.ELEMENT_ARRAY_BUFFER, sphereIndexBuffer);
 
-  gl.uniformMatrix4fv(uMMatrixLocation, false, mMatrix);
-  gl.uniformMatrix4fv(uVMatrixLocation, false, vMatrix);
-  gl.uniformMatrix4fv(uPMatrixLocation, false, pMatrix);
-  gl.uniform3fv(uLightPositionLocation, lightPosition);
-  gl.uniform3fv(uAmbientColorLocation, ambientColor);
-  gl.uniform3fv(uDiffuseColorLocation, diffuseColor);
-  gl.uniform3fv(uSpecularColorLocation, specularColor);
+  webGLContext.uniformMatrix4fv(modelMatrixUniformLocation, false, modelMatrix);
+  webGLContext.uniformMatrix4fv(viewMatrixUniformLocation, false, viewMatrix);
+  webGLContext.uniformMatrix4fv(
+    projectionMatrixUniformLocation,
+    false,
+    projectionMatrix
+  );
+  webGLContext.uniform3fv(lightPositionUniformLocation, lightPosition);
+  webGLContext.uniform3fv(ambientColorUniformLocation, ambientColor);
+  webGLContext.uniform3fv(diffuseColorUniformLocation, diffuseColor);
+  webGLContext.uniform3fv(specularColorUniformLocation, specularColor);
 
-  // draw the sphere
-  gl.drawElements(gl.TRIANGLES, spIndexBuf.numItems, gl.UNSIGNED_INT, 0);
+  webGLContext.drawElements(
+    webGLContext.TRIANGLES,
+    sphereIndexBuffer.numItems,
+    webGLContext.UNSIGNED_INT,
+    0
+  );
 }

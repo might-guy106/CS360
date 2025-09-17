@@ -10,119 +10,207 @@
     <script type="text/javascript" src="cube.js"></script>
     <script type="text/javascript" src="main.js"></script>
     <style>
-      body {
-        margin: 50px;
-      }
-      .wrt {
-        /* justify-content: center; */
-        align-items: center;
-      }
-      #flat {
-        float: left;
-        width: 400px;
-      }
-      #vertex {
-        float: left;
-        width: 400px;
-      }
-      #frag {
-        float: left;
-        width: 400px;
-      }
-      .slider {
-        width: 300px;
-        margin: 10px;
-      }
-      .slider-class {
-        float: left;
-      }
-      .button {
-        float: left;
-        align-items: center;
-        background-color: #fff;
-        border-radius: 24px;
-        box-shadow: rgba(0, 0, 0, 0.2) 0 3px 5px -1px,
-          rgba(0, 0, 0, 0.14) 0 6px 10px 0, rgba(0, 0, 0, 0.12) 0 1px 18px 0;
+      * {
+        margin: 0;
+        padding: 0;
         box-sizing: border-box;
-        color: #3c4043;
-        cursor: pointer;
-        display: inline-flex;
-        font-family: "Google Sans", Roboto, Arial, sans-serif;
-        font-size: 14px;
-        height: 48px;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #6c757d;
+        min-height: 100vh;
+        padding: 20px;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1600px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 30px;
+        color: #4a5568;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .canvas-container {
+        display: flex;
         justify-content: center;
-        letter-spacing: 0.25px;
-        overflow: visible;
-        padding: 2px 24px;
-        position: relative;
-        width: auto;
+        margin-bottom: 25px;
       }
 
-      .button:hover {
-        background: #f6f9fe;
-        color: #174ea6;
+      #webglCanvas {
+        border: 3px solid #4a5568;
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        background: #000;
       }
 
-      .button:active {
-        box-shadow: 0 4px 4px 0 rgb(60 64 67 / 30%),
-          0 8px 12px 6px rgb(60 64 67 / 15%);
+      .labelContainer {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+      }
+
+      .labelContainer h2 {
+        flex: 1;
+        text-align: center;
+        font-size: 1.3rem;
+        color: #4a5568;
+        margin: 10px;
+        padding: 15px;
+        background: #e8e8e8;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        min-width: 250px;
+      }
+
+      .controls-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 25px;
+        margin-top: 30px;
+      }
+
+      .slider-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #f8f8f8;
+        padding: 20px 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        min-width: 400px;
+      }
+
+      .slider-label {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .controlSlider {
+        width: 300px;
+        height: 8px;
+        border-radius: 5px;
+        background: #e2e8f0;
         outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+        transition: all 0.3s ease;
       }
 
-      .button:focus {
-        outline: none;
-        border: 2px solid #4285f4;
+      .controlSlider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #4a5568;
+        cursor: pointer;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .controlSlider::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .controlSlider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #4a5568;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      @media (max-width: 1600px) {
+        #webglCanvas {
+          width: 1200px;
+          height: 400px;
+        }
+      }
+
+      @media (max-width: 1300px) {
+        #webglCanvas {
+          width: 1000px;
+          height: 333px;
+        }
+      }
+
+      @media (max-width: 1100px) {
+        #webglCanvas {
+          width: 900px;
+          height: 300px;
+        }
+
+        .labelContainer {
+          flex-direction: column;
+        }
+
+        .labelContainer h2 {
+          margin: 5px 0;
+        }
       }
     </style>
   </head>
 
-  <body onload="webGLStart();">
-    <!-- Put the canvas in the centre -->
-    <div>
-      <h1>3D Shading</h1>
-      <canvas
-        id="assn2"
-        style="border: none"
-        width="1500"
-        height="500"
-      ></canvas>
-    </div>
-    <!-- Write headings for the three viewports in the same line -->
-    <div class="wrt" style="text-align: center">
-      <h2 id="flat">Per-Face Shading</h2>
-      <h2 id="vertex">Gouraud Shading (Per-Vertex)</h2>
-      <h2 id="frag">Phong Shading (Per-Fragment)</h2>
-    </div>
+  <body onload="initializeApplication();">
+    <div class="container">
+      <h1>3D Shading Techniques</h1>
 
-    <br />
-    <br />
-    <br />
-    <br />
+      <div class="canvas-container">
+        <canvas id="webglCanvas" width="1500" height="500"></canvas>
+      </div>
 
-    <div class="slider-class">
-      <b>Control Light Position :</b>
-      <input
-        type="range"
-        class="slider"
-        id="light-slider"
-        min="-15.0"
-        max="15.0"
-        step="1.0"
-        value="3.0"
-      />
-      <br />
-      <b>Control Camera Zoom :</b>
-      <input
-        type="range"
-        class="slider"
-        id="camera-slider"
-        min="0.0"
-        max="15.0"
-        step="1.0"
-        value="2.0"
-      />
+      <div class="labelContainer">
+        <h2 id="flatShadingLabel">Per-Face Shading</h2>
+        <h2 id="gouraudShadingLabel">Gouraud Shading (Per-Vertex)</h2>
+        <h2 id="phongShadingLabel">Phong Shading (Per-Fragment)</h2>
+      </div>
+
+      <div class="controls-container">
+        <div class="slider-group">
+          <div class="slider-label">Control Light Position</div>
+          <input
+            type="range"
+            class="controlSlider"
+            id="lightPositionSlider"
+            min="-15.0"
+            max="15.0"
+            step="1.0"
+            value="3.0"
+          />
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">Control Camera Zoom</div>
+          <input
+            type="range"
+            class="controlSlider"
+            id="cameraZoomSlider"
+            min="0.0"
+            max="15.0"
+            step="1.0"
+            value="2.0"
+          />
+        </div>
+      </div>
     </div>
-    <br />
-    <button class="button" onClick="window.location.reload();">RESET</button>
   </body>
 </html>
