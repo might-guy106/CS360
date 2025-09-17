@@ -159,44 +159,42 @@ void main() {
 }`;
 
 function compileVertexShader(vertexShaderCode) {
-  const shader = webGLContext.createShader(webGLContext.VERTEX_SHADER);
-  webGLContext.shaderSource(shader, vertexShaderCode);
-  webGLContext.compileShader(shader);
-  if (!webGLContext.getShaderParameter(shader, webGLContext.COMPILE_STATUS)) {
-    alert(webGLContext.getShaderInfoLog(shader));
+  const shader = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(shader, vertexShaderCode);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    alert(gl.getShaderInfoLog(shader));
     return null;
   }
   return shader;
 }
 
 function compileFragmentShader(fragmentShaderCode) {
-  const shader = webGLContext.createShader(webGLContext.FRAGMENT_SHADER);
-  webGLContext.shaderSource(shader, fragmentShaderCode);
-  webGLContext.compileShader(shader);
-  if (!webGLContext.getShaderParameter(shader, webGLContext.COMPILE_STATUS)) {
-    alert(webGLContext.getShaderInfoLog(shader));
+  const shader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(shader, fragmentShaderCode);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    alert(gl.getShaderInfoLog(shader));
     return null;
   }
   return shader;
 }
 
 function createShaderProgram(vertexShaderCode, fragmentShaderCode) {
-  const shaderProgram = webGLContext.createProgram();
+  const shaderProgram = gl.createProgram();
 
   const vertexShader = compileVertexShader(vertexShaderCode);
   const fragmentShader = compileFragmentShader(fragmentShaderCode);
 
-  webGLContext.attachShader(shaderProgram, vertexShader);
-  webGLContext.attachShader(shaderProgram, fragmentShader);
-  webGLContext.linkProgram(shaderProgram);
+  gl.attachShader(shaderProgram, vertexShader);
+  gl.attachShader(shaderProgram, fragmentShader);
+  gl.linkProgram(shaderProgram);
 
-  if (
-    !webGLContext.getProgramParameter(shaderProgram, webGLContext.LINK_STATUS)
-  ) {
-    console.log(webGLContext.getShaderInfoLog(vertexShader));
-    console.log(webGLContext.getShaderInfoLog(fragmentShader));
+  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+    console.log(gl.getShaderInfoLog(vertexShader));
+    console.log(gl.getShaderInfoLog(fragmentShader));
   }
 
-  webGLContext.useProgram(shaderProgram);
+  gl.useProgram(shaderProgram);
   return shaderProgram;
 }

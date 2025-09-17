@@ -1,4 +1,4 @@
-var webGLContext;
+var gl;
 var renderCanvas;
 var viewportHeight;
 var viewportWidth;
@@ -59,11 +59,11 @@ var upVector = [0.0, 1.0, 0.0];
 
 function initializeWebGL(canvas) {
   try {
-    webGLContext = canvas.getContext("webgl2");
-    webGLContext.viewportWidth = canvas.width;
-    webGLContext.viewportHeight = canvas.height;
+    gl = canvas.getContext("webgl2");
+    gl.viewportWidth = canvas.width;
+    gl.viewportHeight = canvas.height;
   } catch (e) {}
-  if (!webGLContext) {
+  if (!gl) {
     alert("WebGL initialization failed");
   }
 }
@@ -323,177 +323,135 @@ function renderThirdScene() {
 function renderAllScenes() {
   viewportHeight = renderCanvas.height;
   viewportWidth = renderCanvas.width / 3;
-  webGLContext.enable(webGLContext.SCISSOR_TEST);
+  gl.enable(gl.SCISSOR_TEST);
 
   shaderProgram = flatShadingShaderProgram;
-  webGLContext.useProgram(shaderProgram);
+  gl.useProgram(shaderProgram);
 
-  webGLContext.viewport(0, 0, viewportWidth, viewportHeight);
-  webGLContext.scissor(0, 0, viewportWidth, viewportHeight);
+  gl.viewport(0, 0, viewportWidth, viewportHeight);
+  gl.scissor(0, 0, viewportWidth, viewportHeight);
 
-  webGLContext.clearColor(0.85, 0.85, 0.95, 1.0);
-  webGLContext.clear(
-    webGLContext.COLOR_BUFFER_BIT | webGLContext.DEPTH_BUFFER_BIT
-  );
+  gl.clearColor(0.85, 0.85, 0.95, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  positionAttributeLocation = webGLContext.getAttribLocation(
-    shaderProgram,
-    "aPosition"
-  );
-  normalAttributeLocation = webGLContext.getAttribLocation(
-    shaderProgram,
-    "aNormal"
-  );
-  modelMatrixUniformLocation = webGLContext.getUniformLocation(
-    shaderProgram,
-    "uMMatrix"
-  );
-  viewMatrixUniformLocation = webGLContext.getUniformLocation(
-    shaderProgram,
-    "uVMatrix"
-  );
-  projectionMatrixUniformLocation = webGLContext.getUniformLocation(
+  positionAttributeLocation = gl.getAttribLocation(shaderProgram, "aPosition");
+  normalAttributeLocation = gl.getAttribLocation(shaderProgram, "aNormal");
+  modelMatrixUniformLocation = gl.getUniformLocation(shaderProgram, "uMMatrix");
+  viewMatrixUniformLocation = gl.getUniformLocation(shaderProgram, "uVMatrix");
+  projectionMatrixUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uPMatrix"
   );
-  lightPositionUniformLocation = webGLContext.getUniformLocation(
+  lightPositionUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uLightPosition"
   );
-  ambientColorUniformLocation = webGLContext.getUniformLocation(
+  ambientColorUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uAmbientColor"
   );
-  diffuseColorUniformLocation = webGLContext.getUniformLocation(
+  diffuseColorUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uDiffuseColor"
   );
-  specularColorUniformLocation = webGLContext.getUniformLocation(
+  specularColorUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uSpecularColor"
   );
 
-  webGLContext.enableVertexAttribArray(positionAttributeLocation);
-  webGLContext.enableVertexAttribArray(normalAttributeLocation);
+  gl.enableVertexAttribArray(positionAttributeLocation);
+  gl.enableVertexAttribArray(normalAttributeLocation);
 
   initializeSphereBuffers();
   initializeCubeBuffers();
 
-  webGLContext.enable(webGLContext.DEPTH_TEST);
+  gl.enable(gl.DEPTH_TEST);
   renderFirstScene();
 
   shaderProgram = gouraudShaderProgram;
-  webGLContext.useProgram(shaderProgram);
+  gl.useProgram(shaderProgram);
 
-  webGLContext.viewport(viewportWidth, 0, viewportWidth, viewportHeight);
-  webGLContext.scissor(viewportWidth, 0, viewportWidth, viewportHeight);
+  gl.viewport(viewportWidth, 0, viewportWidth, viewportHeight);
+  gl.scissor(viewportWidth, 0, viewportWidth, viewportHeight);
 
-  webGLContext.clearColor(0.95, 0.85, 0.85, 1.0);
-  webGLContext.clear(
-    webGLContext.COLOR_BUFFER_BIT | webGLContext.DEPTH_BUFFER_BIT
-  );
+  gl.clearColor(0.95, 0.85, 0.85, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  positionAttributeLocation = webGLContext.getAttribLocation(
-    shaderProgram,
-    "aPosition"
-  );
-  normalAttributeLocation = webGLContext.getAttribLocation(
-    shaderProgram,
-    "aNormal"
-  );
-  modelMatrixUniformLocation = webGLContext.getUniformLocation(
-    shaderProgram,
-    "uMMatrix"
-  );
-  viewMatrixUniformLocation = webGLContext.getUniformLocation(
-    shaderProgram,
-    "uVMatrix"
-  );
-  projectionMatrixUniformLocation = webGLContext.getUniformLocation(
+  positionAttributeLocation = gl.getAttribLocation(shaderProgram, "aPosition");
+  normalAttributeLocation = gl.getAttribLocation(shaderProgram, "aNormal");
+  modelMatrixUniformLocation = gl.getUniformLocation(shaderProgram, "uMMatrix");
+  viewMatrixUniformLocation = gl.getUniformLocation(shaderProgram, "uVMatrix");
+  projectionMatrixUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uPMatrix"
   );
-  lightPositionUniformLocation = webGLContext.getUniformLocation(
+  lightPositionUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uLightPosition"
   );
-  ambientColorUniformLocation = webGLContext.getUniformLocation(
+  ambientColorUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uAmbientColor"
   );
-  diffuseColorUniformLocation = webGLContext.getUniformLocation(
+  diffuseColorUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uDiffuseColor"
   );
-  specularColorUniformLocation = webGLContext.getUniformLocation(
+  specularColorUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uSpecularColor"
   );
 
-  webGLContext.enableVertexAttribArray(positionAttributeLocation);
-  webGLContext.enableVertexAttribArray(normalAttributeLocation);
+  gl.enableVertexAttribArray(positionAttributeLocation);
+  gl.enableVertexAttribArray(normalAttributeLocation);
 
   initializeSphereBuffers();
   initializeCubeBuffers();
 
-  webGLContext.enable(webGLContext.DEPTH_TEST);
+  gl.enable(gl.DEPTH_TEST);
   renderSecondScene();
 
   shaderProgram = phongShaderProgram;
-  webGLContext.useProgram(shaderProgram);
+  gl.useProgram(shaderProgram);
 
-  webGLContext.viewport(2 * viewportWidth, 0, viewportWidth, viewportHeight);
-  webGLContext.scissor(2 * viewportWidth, 0, viewportWidth, viewportHeight);
+  gl.viewport(2 * viewportWidth, 0, viewportWidth, viewportHeight);
+  gl.scissor(2 * viewportWidth, 0, viewportWidth, viewportHeight);
 
-  webGLContext.clearColor(0.85, 0.95, 0.85, 1.0);
-  webGLContext.clear(
-    webGLContext.COLOR_BUFFER_BIT | webGLContext.DEPTH_BUFFER_BIT
-  );
+  gl.clearColor(0.85, 0.95, 0.85, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  positionAttributeLocation = webGLContext.getAttribLocation(
-    shaderProgram,
-    "aPosition"
-  );
-  normalAttributeLocation = webGLContext.getAttribLocation(
-    shaderProgram,
-    "aNormal"
-  );
-  modelMatrixUniformLocation = webGLContext.getUniformLocation(
-    shaderProgram,
-    "uMMatrix"
-  );
-  viewMatrixUniformLocation = webGLContext.getUniformLocation(
-    shaderProgram,
-    "uVMatrix"
-  );
-  projectionMatrixUniformLocation = webGLContext.getUniformLocation(
+  positionAttributeLocation = gl.getAttribLocation(shaderProgram, "aPosition");
+  normalAttributeLocation = gl.getAttribLocation(shaderProgram, "aNormal");
+  modelMatrixUniformLocation = gl.getUniformLocation(shaderProgram, "uMMatrix");
+  viewMatrixUniformLocation = gl.getUniformLocation(shaderProgram, "uVMatrix");
+  projectionMatrixUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uPMatrix"
   );
-  lightPositionUniformLocation = webGLContext.getUniformLocation(
+  lightPositionUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uLightPosition"
   );
-  ambientColorUniformLocation = webGLContext.getUniformLocation(
+  ambientColorUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uAmbientColor"
   );
-  diffuseColorUniformLocation = webGLContext.getUniformLocation(
+  diffuseColorUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uDiffuseColor"
   );
-  specularColorUniformLocation = webGLContext.getUniformLocation(
+  specularColorUniformLocation = gl.getUniformLocation(
     shaderProgram,
     "uSpecularColor"
   );
 
-  webGLContext.enableVertexAttribArray(positionAttributeLocation);
-  webGLContext.enableVertexAttribArray(normalAttributeLocation);
+  gl.enableVertexAttribArray(positionAttributeLocation);
+  gl.enableVertexAttribArray(normalAttributeLocation);
 
   initializeSphereBuffers();
   initializeCubeBuffers();
 
-  webGLContext.enable(webGLContext.DEPTH_TEST);
+  gl.enable(gl.DEPTH_TEST);
   renderThirdScene();
 }
 

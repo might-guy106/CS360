@@ -17,13 +17,9 @@ function initializeCubeBuffers() {
     // Left face
     -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5,
   ];
-  cubeVertexBuffer = webGLContext.createBuffer();
-  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, cubeVertexBuffer);
-  webGLContext.bufferData(
-    webGLContext.ARRAY_BUFFER,
-    new Float32Array(vertices),
-    webGLContext.STATIC_DRAW
-  );
+  cubeVertexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
   cubeVertexBuffer.itemSize = 3;
   cubeVertexBuffer.numItems = vertices.length / 3;
 
@@ -41,13 +37,9 @@ function initializeCubeBuffers() {
     // Left face
     -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
   ];
-  cubeNormalBuffer = webGLContext.createBuffer();
-  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, cubeNormalBuffer);
-  webGLContext.bufferData(
-    webGLContext.ARRAY_BUFFER,
-    new Float32Array(normals),
-    webGLContext.STATIC_DRAW
-  );
+  cubeNormalBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeNormalBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
   cubeNormalBuffer.itemSize = 3;
   cubeNormalBuffer.numItems = normals.length / 3;
 
@@ -89,56 +81,47 @@ function initializeCubeBuffers() {
     22,
     23, // Left face
   ];
-  cubeIndexBuffer = webGLContext.createBuffer();
-  webGLContext.bindBuffer(webGLContext.ELEMENT_ARRAY_BUFFER, cubeIndexBuffer);
-  webGLContext.bufferData(
-    webGLContext.ELEMENT_ARRAY_BUFFER,
+  cubeIndexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeIndexBuffer);
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
     new Uint16Array(indices),
-    webGLContext.STATIC_DRAW
+    gl.STATIC_DRAW
   );
   cubeIndexBuffer.itemSize = 1;
   cubeIndexBuffer.numItems = indices.length;
 }
 
 function renderCube(modelMatrix, viewMatrix, projectionMatrix) {
-  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, cubeVertexBuffer);
-  webGLContext.vertexAttribPointer(
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexBuffer);
+  gl.vertexAttribPointer(
     positionAttributeLocation,
     cubeVertexBuffer.itemSize,
-    webGLContext.FLOAT,
+    gl.FLOAT,
     false,
     0,
     0
   );
 
-  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, cubeNormalBuffer);
-  webGLContext.vertexAttribPointer(
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeNormalBuffer);
+  gl.vertexAttribPointer(
     normalAttributeLocation,
     cubeNormalBuffer.itemSize,
-    webGLContext.FLOAT,
+    gl.FLOAT,
     false,
     0,
     0
   );
 
-  webGLContext.bindBuffer(webGLContext.ELEMENT_ARRAY_BUFFER, cubeIndexBuffer);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeIndexBuffer);
 
-  webGLContext.uniformMatrix4fv(modelMatrixUniformLocation, false, modelMatrix);
-  webGLContext.uniformMatrix4fv(viewMatrixUniformLocation, false, viewMatrix);
-  webGLContext.uniformMatrix4fv(
-    projectionMatrixUniformLocation,
-    false,
-    projectionMatrix
-  );
-  webGLContext.uniform3fv(lightPositionUniformLocation, lightPosition);
-  webGLContext.uniform3fv(ambientColorUniformLocation, ambientColor);
-  webGLContext.uniform3fv(diffuseColorUniformLocation, diffuseColor);
-  webGLContext.uniform3fv(specularColorUniformLocation, specularColor);
+  gl.uniformMatrix4fv(modelMatrixUniformLocation, false, modelMatrix);
+  gl.uniformMatrix4fv(viewMatrixUniformLocation, false, viewMatrix);
+  gl.uniformMatrix4fv(projectionMatrixUniformLocation, false, projectionMatrix);
+  gl.uniform3fv(lightPositionUniformLocation, lightPosition);
+  gl.uniform3fv(ambientColorUniformLocation, ambientColor);
+  gl.uniform3fv(diffuseColorUniformLocation, diffuseColor);
+  gl.uniform3fv(specularColorUniformLocation, specularColor);
 
-  webGLContext.drawElements(
-    webGLContext.TRIANGLES,
-    cubeIndexBuffer.numItems,
-    webGLContext.UNSIGNED_SHORT,
-    0
-  );
+  gl.drawElements(gl.TRIANGLES, cubeIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }

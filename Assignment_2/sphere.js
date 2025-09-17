@@ -69,76 +69,67 @@ function initializeSphereBuffers() {
   const radius = 0.5;
   generateSphereGeometry(sliceCount, stackCount, radius);
 
-  sphereVertexBuffer = webGLContext.createBuffer();
-  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, sphereVertexBuffer);
-  webGLContext.bufferData(
-    webGLContext.ARRAY_BUFFER,
+  sphereVertexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
     new Float32Array(sphereVertices),
-    webGLContext.STATIC_DRAW
+    gl.STATIC_DRAW
   );
   sphereVertexBuffer.itemSize = 3;
   sphereVertexBuffer.numItems = sliceCount * stackCount;
 
-  sphereNormalBuffer = webGLContext.createBuffer();
-  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, sphereNormalBuffer);
-  webGLContext.bufferData(
-    webGLContext.ARRAY_BUFFER,
+  sphereNormalBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, sphereNormalBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
     new Float32Array(sphereNormals),
-    webGLContext.STATIC_DRAW
+    gl.STATIC_DRAW
   );
   sphereNormalBuffer.itemSize = 3;
   sphereNormalBuffer.numItems = sliceCount * stackCount;
 
-  sphereIndexBuffer = webGLContext.createBuffer();
-  webGLContext.bindBuffer(webGLContext.ELEMENT_ARRAY_BUFFER, sphereIndexBuffer);
-  webGLContext.bufferData(
-    webGLContext.ELEMENT_ARRAY_BUFFER,
+  sphereIndexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereIndexBuffer);
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
     new Uint32Array(sphereIndices),
-    webGLContext.STATIC_DRAW
+    gl.STATIC_DRAW
   );
   sphereIndexBuffer.itemsize = 1;
   sphereIndexBuffer.numItems = (stackCount - 1) * 6 * (sliceCount + 1);
 }
 
 function renderSphere(modelMatrix, viewMatrix, projectionMatrix) {
-  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, sphereVertexBuffer);
-  webGLContext.vertexAttribPointer(
+  gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexBuffer);
+  gl.vertexAttribPointer(
     positionAttributeLocation,
     sphereVertexBuffer.itemSize,
-    webGLContext.FLOAT,
+    gl.FLOAT,
     false,
     0,
     0
   );
 
-  webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, sphereNormalBuffer);
-  webGLContext.vertexAttribPointer(
+  gl.bindBuffer(gl.ARRAY_BUFFER, sphereNormalBuffer);
+  gl.vertexAttribPointer(
     normalAttributeLocation,
     sphereNormalBuffer.itemSize,
-    webGLContext.FLOAT,
+    gl.FLOAT,
     false,
     0,
     0
   );
 
-  webGLContext.bindBuffer(webGLContext.ELEMENT_ARRAY_BUFFER, sphereIndexBuffer);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereIndexBuffer);
 
-  webGLContext.uniformMatrix4fv(modelMatrixUniformLocation, false, modelMatrix);
-  webGLContext.uniformMatrix4fv(viewMatrixUniformLocation, false, viewMatrix);
-  webGLContext.uniformMatrix4fv(
-    projectionMatrixUniformLocation,
-    false,
-    projectionMatrix
-  );
-  webGLContext.uniform3fv(lightPositionUniformLocation, lightPosition);
-  webGLContext.uniform3fv(ambientColorUniformLocation, ambientColor);
-  webGLContext.uniform3fv(diffuseColorUniformLocation, diffuseColor);
-  webGLContext.uniform3fv(specularColorUniformLocation, specularColor);
+  gl.uniformMatrix4fv(modelMatrixUniformLocation, false, modelMatrix);
+  gl.uniformMatrix4fv(viewMatrixUniformLocation, false, viewMatrix);
+  gl.uniformMatrix4fv(projectionMatrixUniformLocation, false, projectionMatrix);
+  gl.uniform3fv(lightPositionUniformLocation, lightPosition);
+  gl.uniform3fv(ambientColorUniformLocation, ambientColor);
+  gl.uniform3fv(diffuseColorUniformLocation, diffuseColor);
+  gl.uniform3fv(specularColorUniformLocation, specularColor);
 
-  webGLContext.drawElements(
-    webGLContext.TRIANGLES,
-    sphereIndexBuffer.numItems,
-    webGLContext.UNSIGNED_INT,
-    0
-  );
+  gl.drawElements(gl.TRIANGLES, sphereIndexBuffer.numItems, gl.UNSIGNED_INT, 0);
 }
